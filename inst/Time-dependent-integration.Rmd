@@ -1,0 +1,253 @@
+---
+title: "Time-dependent GeoTox"
+output: html_document
+date: "2025-06-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(httk)
+library(dplyr)
+library(GeoTox)
+library(gganimate)
+library(gifski)
+devtools::load_all()
+```
+
+#Time Dependent GeoTox
+
+This is an introduction and brainstorming document for creating a time-dependent GeoTox object and tailoring functions to use this object.
+
+## Exposure Object
+
+Create the GeoTox object `GT`.
+
+```{r}
+GT <- GeoTox::GeoTox()
+```
+
+
+The exposure object will have columns `Location`, `Chemical`, `Time`, `Exposure` plus potentially other columns.
+
+```{r}
+exposure_td <- data.frame(Location = rep(c('CT', 'NC'), each = 6), Chemical = rep(paste0('chem',1:3), 4), casn = rep(paste0('casn', 1:3), 4), Time = rep(rep(1:2, each = 3), 2), Exposure = 1:12)
+```
+
+Assign a new list value to the GeoTox object under the name `exposure_td`.
+
+```{r}
+GT$exposure_td <- exposure_td
+GT$exposure_td
+```
+
+In the function `GeoTox::simulate_population()`, the list value `C_ext` is assigned to `GT` using the `GeoTox::simulate_exposure()` function. We already have exposure data with external concentrations, so we split the values by location and chemical.
+
+```{r}
+GT$C_ext <- lapply(split(GT$exposure_td, ~Location), function(df) {
+  split(df, ~ Chemical)
+})
+GT$C_ext
+```
+Note that the exposure data is organized first by location and then by chemical. So to recover data for chem3 in CT we would use `GT$C_ext$CT$chem3`. 
+
+## Preparing `httk` models
+
+With time series exposure data for each chemical and location, we now can use the various `httk::solve_*` functions to run simulations on the exposure. 
+
+We need to parameterize the model we wish to use from httk. To do this, we first generate populate parameters using the following function. This needs to be run for each chemical, age limit, and weight category. This could be completed in the `GeoTox::simulate_population()` function. These would then be stored in `GT$httk_param`, nested in the same manner as other new features, by location, chemical. We could `rbind` all outputs across `agelim_years` and `weight_category` values for one table per location-chemical pair. In this example, we simulate 100 people with ages from 21 to 30 in the weight category 'Normal' (as opposed to the alternate 'Obese' option). We also set a seed for reproducibility.
+
+```{r}
+pop_param <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+                                           agelim_years = c(21, 30),
+                                           weight_category = 'Normal',
+                                           samples = 100,
+                                           set_seed = TRUE,
+                                           seed = 2345)
+head(pop_param)
+```
+
+Note, if you would like to simulate a population with specific number of people for different ages, this can be done as well.
+
+```{r}
+age_matrix <- matrix(c(3, 21, 43, 2, 4, 2), ncol = 2)
+colnames(age_matrix) <- c('age', 'samples')
+pop_param_2 <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+                                                          weight_category = 'Normal',
+                                                          age_matrix = age_matrix,
+                                                          set_seed = TRUE,
+                                                          seed = 2345)
+head(pop_param_2)
+```
+
+
+Once we have these parameters, we pick a model from httk, in this case 'pbtk', and input the population parameters. This prepares parameters for each person of the simulated population that can then be used in the `httk::solve_pbtk` function.
+
+```{r}
+pbtk_param <- parametrize_httk(chem.cas = '87-86-5',
+                               model= 'pbtk',
+                               mcs = pop_param)
+```
+
+
+We will also need to convert `C_ext` data from external dosing to internal dosing. Using the existing functions, we can augment the `C_ext` data as follows. Here we assume the `IR` parameter is 3.2 just to illustrate the method. One thing to note is that we depending on the time resolution, the `time` parameter may also need input. In this case, using `purrr::map2` may be the more appropriate function for this task. This calculation might also involve using the `diff` function to determine time intervals with a decision made on how best to determine the time period for the last exposure value when the exposure events are not at equally spaced times. Finally, body weight is not currently input into this example function, but should in the future.
+
+```{r}
+GT$D_ext <- lapply(GT$C_ext, function(l){
+  lapply(l, function(df){
+    df |> dplyr::mutate(Dose = calc_internal_dose(matrix(.data$Exposure),
+                                           IR = 3.2)[[1]])})
+  })
+GT$D_ext
+```
+
+
+
+In the following examples, we will use a dose matrix that spans 30 days of data, with an acute exposure given by the function 100exp(-t) for t in days, broken up by hour. The exposure is 0 for the first day and then follows the function as described. The area under the curve is approximately 100. We also have a periodic exposure given by 100/19*abs(sin(t)), and a constant exposure given by 10/3. Time is measured in days and exposure is measured in 'mg/kg', which we can change.
+
+```{r}
+time <- seq(0, 30, 1/24)
+dose_a <- c(rep(0, 24), 100*exp(-time[1:697]))
+acute_dose_matrix <- matrix(c(time, dose_a), ncol = 2)
+colnames(acute_dose_matrix) <- c('time', 'dose')
+
+dose_b <- 100/19*abs(sin(time))
+periodic_dose_matrix <- matrix(c(time, dose_b), ncol = 2)
+colnames(periodic_dose_matrix) <- c('time', 'dose')
+
+dose_c <- rep(10/3, length(time))
+constant_dose_matrix <- matrix(c(time, dose_c), ncol = 2)
+colnames(constant_dose_matrix) <- c('time', 'dose')
+```
+
+Finally, we simulate the chemical adme with the population parameters and dosing matrix. We also generate a plot of the simulations.
+
+The acute exposure.
+
+```{r}
+simulation_acute <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = acute_dose_matrix, standardize = FALSE)
+#head(simulation_acute$numeric)
+simulation_acute$plasma_plot
+```
+
+The periodic exposure.
+
+```{r}
+simulation_periodic <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = periodic_dose_matrix, standardize = FALSE)
+#head(simulation_periodic$numeric)
+simulation_periodic$plasma_plot
+```
+
+The constant exposure.
+
+```{r}
+simulation_constant <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = constant_dose_matrix, standardize = FALSE)
+#head(simulation_constant$numeric)
+simulation_constant$plasma_plot
+```
+One thing to note is that as written, this is simulating the same dosing level for each person, while in reality the same exposure level will represent different dosing levels based on age, weight. This should be accounted for by taking the dosing matrix, using the inhalation rate for that simulated person, and adjusting the internal dose to 'mg/kg' based on the weight of the simulated person. This would be built into the step during which we calculate and assign values to `GT$D_ext`. How best to do this is to be determined.
+
+We repeat the above plots with the same overall dose for each person, in 'mg' rather dose rate 'mg/kg'.
+
+The acute exposure.
+
+```{r}
+simulation_acute_fixed_dose <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = acute_dose_matrix, input.units = 'mg', standardize = FALSE)
+#head(simulation_acute$numeric)
+simulation_acute_fixed_dose$plasma_plot
+```
+
+The periodic exposure.
+
+```{r}
+simulation_periodic_fixed_dose <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = periodic_dose_matrix, input.units = 'mg', standardize = FALSE)
+#head(simulation_periodic$numeric)
+simulation_periodic_fixed_dose$plasma_plot
+```
+
+The constant exposure.
+
+```{r}
+simulation_constant_fixed_dose <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = constant_dose_matrix, input.units = 'mg', standardize = FALSE)
+#head(simulation_constant$numeric)
+simulation_constant_fixed_dose$plasma_plot
+```
+Finally, we demonstrate the simulation with dosing standardized to the time segment between dosing time points and with the inhalation rate determined by body weight. The dosing units are 'mg/kg'.
+
+The acute exposure.
+
+```{r}
+simulation_acute_standard <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = acute_dose_matrix, standardize = TRUE)
+#head(simulation_acute_standard$numeric)
+simulation_acute_standard$plasma_plot
+```
+
+The periodic exposure.
+
+```{r}
+simulation_periodic_standard <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = periodic_dose_matrix, standardize = TRUE)
+#head(simulation_periodic_standard$numeric)
+simulation_periodic_standard$plasma_plot
+```
+
+The constant exposure.
+
+```{r}
+simulation_constant_standard <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = constant_dose_matrix, standardize = TRUE)
+#head(simulation_constant_standard$numeric)
+simulation_constant_standard$plasma_plot
+```
+
+
+
+### Plotting time-series exposure and response
+
+We also can leverage the time evolution of the data using chloropleth plots that we then animate. We build the prototype function below and test it out. First we create some mock time-series data. There are five counties, three with complete data and two with incomplete data.
+
+
+```{r}
+mock_time_series <- data.frame(FIPS = rep(c(37001, 37003, 37181, 37135, 37063), each = 10), casn = rep(c('87-86-5'), 50), chnm = rep(c('Pentachlorophenol'), 50), Time = rep(c(1990:1999), 5), Exposure = c(1:10, 10:1, c(3, 5, 7, 9, 15, 25), rep(NA, 4), rep(NA, 5), c(2,2,3), rep(NA, 2), seq(3, 7, length.out = 10)))
+mock_time_series
+```
+
+We process this data following a similar approach to what is already use in the GeoTox package.
+
+
+```{r}
+sf_data_nc <- tibble::tibble("_temp_join_id_" = names(split(mock_time_series, ~FIPS)), data = split(mock_time_series, ~FIPS)) |> 
+    tidyr::unnest(cols = "data") |> 
+    dplyr::inner_join(geo_tox_data$boundaries$county |> dplyr::rename("_temp_join_id_" = 1),
+                      by = dplyr::join_by("_temp_join_id_")) |> 
+    dplyr::select(-"_temp_join_id_") |> 
+    dplyr::mutate(dplyr::across(tidyselect::any_of('chnm'),
+                                ~ stringr::str_remove_all(., "\u200b"))) |> sf::st_as_sf()
+```
+
+Next we construct the chloropleth and animate it using the `gganimate` R package. In this example, county borders are colored white, counties without any data are colored light grey, and counties with incomplete data are color grey95 at times when missing data. For counties and times with data, the color is determined by a normalized viridis scale.
+
+```{r}
+nc_movie <- ggplot() + geom_sf(data= geo_tox_data$boundaries$state, aes(geometry = geometry), fill = NA, size = 0.15) + 
+  geom_sf(data = sf_data_nc, aes(fill = Exposure, geometry = geometry), color = 'white') + geom_sf(data = geo_tox_data$boundaries$county |> dplyr::filter(!(FIPS %in% sf_data_nc$FIPS)), ggplot2::aes(geometry = .data$geometry), fill = 'light grey', color = 'white', lwd = 0.01)
+nc_movie <- nc_movie +
+    ggplot2::scale_fill_viridis_c(
+      name = "Normalized\nConcentration",
+      direction = -1,
+      option = "A",
+      limits = c(0, max(sf_data_nc$Exposure, na.rm = TRUE)),
+      na.value = 'grey95') +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      axis.ticks = ggplot2::element_blank(),
+      axis.text = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(size = 6),
+      text = ggplot2::element_text(size = 12),
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank()) + labs(title = 'Exposure at time {frame_time}')
+nc_movie <- nc_movie + gganimate::transition_time(Time, range = c(1990L, 1999L))
+gganimate::animate(nc_movie, nframes = 10, fps = 1)
+```
+
+The sensitivity analysis currently used by GeoTox simulates exposure or uses the stored exposure values. With time-dependent exposure, it may be better to sample from the empirical distribution determined by the exposure data for a given time resolution. This will give `C_ext` values to use within the `compute_sensitivity()` function. Alternatively, instead of using an empirical distribution, one could consider sampling uniformly from the range of exposure values represented by the exposure data as the empirical distribution may correspond to a rare event while the uniform sampling represents a portion of the potential values that are possible.
