@@ -20,9 +20,13 @@ URL: https://niehs.github.io/GeoTox/, https://github.com/NIEHS/GeoTox
 Depends: 
     R (>= 4.4.0)
 Imports: 
+    cli,
+    ctxR,
+    data.table,
     dplyr,
     ggplot2,
     ggridges,
+    methods,
     purrr,
     rlang,
     sf,
