@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(httk)
 library(dplyr)
+library(data.table)
 library(GeoTox)
 library(gganimate)
 library(gifski)
@@ -201,6 +202,37 @@ simulation_constant_standard <- solve_httk_model(chem.cas = '87-86-5', parameter
 simulation_constant_standard$plasma_plot
 ```
 
+Finally, we may look at the 'average' person among the population. To do this, we use the `get_population_average()` function to process the average person among the simulated people. This takes the average value for each population parameter.
+
+```{r}
+average_person <- get_population_average(pbtk_param)
+average_person
+```
+We can also plot this average person with the general population.
+
+The acute exposure.
+
+```{r}
+simulation_acute_standard_average <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = acute_dose_matrix, standardize = TRUE, plot_average = TRUE)
+#head(simulation_acute_standard_average$numeric)
+simulation_acute_standard_average$plasma_plot
+```
+
+The periodic exposure.
+
+```{r}
+simulation_periodic_standard_average <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = periodic_dose_matrix, standardize = TRUE, plot_average = TRUE)
+#head(simulation_periodic_standard_average$numeric)
+simulation_periodic_standard_average$plasma_plot
+```
+
+The constant exposure.
+
+```{r}
+simulation_constant_standard_average <- solve_httk_model(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, data.matrix = constant_dose_matrix, standardize = TRUE, plot_average = TRUE)
+#head(simulation_constant_standard_average$numeric)
+simulation_constant_standard_average$plasma_plot
+```
 
 
 ### Plotting time-series exposure and response
