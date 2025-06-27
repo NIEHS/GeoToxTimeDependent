@@ -14,7 +14,8 @@ solve_httk_model(
   output.units = "uM",
   timestep = NULL,
   IR = NULL,
-  standardize = TRUE
+  standardize = TRUE,
+  plot_average = FALSE
 )
 }
 \arguments{
@@ -47,6 +48,9 @@ the individuals given by the \code{parameters} data.}
 
 \item{standardize}{Standardize exposure by individual-specific \code{IR} and
 bodyweight.}
+
+\item{plot_average}{Whether to compute and plot the 'average' individual from
+the set of \code{parameters} representing the entire simulated population.}
 }
 \value{
 A list of httk model output values for each iteration and an
