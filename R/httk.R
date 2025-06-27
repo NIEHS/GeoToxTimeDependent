@@ -371,6 +371,8 @@ parametrize_httk <- function(chem.cas,
 #'   the individuals given by the `parameters` data.
 #' @param standardize Standardize exposure by individual-specific `IR` and
 #'   bodyweight.
+#' @param plot_average Whether to compute and plot the 'average' individual from
+#'   the set of `parameters` representing the entire simulated population.
 #'
 #' @returns A list of httk model output values for each iteration and an
 #'   optional `ggplot2` plot of the Cplasma vs time for each individual
@@ -388,7 +390,8 @@ solve_httk_model <- function(chem.cas,
                              output.units = 'uM',
                              timestep = NULL,
                              IR = NULL,
-                             standardize = TRUE){
+                             standardize = TRUE,
+                             plot_average = FALSE){
 
   n_entries <- dim(parameters)[[1]]
 
@@ -456,6 +459,8 @@ solve_httk_model <- function(chem.cas,
                                        days = days))
       temp$iteration <- i
       temp$iteration <- as.factor(temp$iteration)
+      temp$person <- 'general person'
+      temp$person <- as.factor(temp$person)
       results[[i]] <- temp
     }
   } else {
@@ -463,12 +468,55 @@ solve_httk_model <- function(chem.cas,
     temp <- as.data.frame(httk_model(parameters = parameters[i,], suppress.messages = TRUE))
     temp$iteration <- i
     temp$iteration <- as.factor(temp$iteration)
+    temp$person <- 'general person'
+    temp$person <- as.factor(temp$person)
     results[[i]] <- temp
   }
   }
 
+  if (plot & plot_average){
+    average_person_param <- get_population_average(parameters)
+    if(!is.null(data.matrix)){
+      internal_dose <- data.matrix
+      if (standardize){
+        internal_dose <- calc_internal_dose_td(C_ext = data.matrix,
+                                               IR = mean(IR_internal),
+                                               BW = average_person_param$BW,
+                                               scaling = 1,
+                                               timestep = timestep)
+      }
+      average_person <- as.data.frame(httk_model(chem.cas = chem.cas,
+                                                 parameters = average_person_param,
+                                                 input.units = input.units,
+                                                 output.units = output.units,
+                                                 dosing.matrix = internal_dose,
+                                                 suppress.messages = TRUE,
+                                                 days = days))
+      average_person$iteration <- NA
+      average_person$iteration <- as.factor(average_person$iteration)
+      average_person$person <- 'average_person'
+      average_person$person <- as.factor(average_person$person)
+    } else {
+      average_person <- as.data.frame(httk_model(parameters = average_person_param,
+                                                 suppress.messages = TRUE))
+      average_person$iteration <- NA
+      average_person$iteration <- as.factor(average_person$iteration)
+      average_person$person <- 'average_person'
+      average_person$person <- as.factor(average_person$person)
+    }
+
+  }
+
+  names(results) <- paste('Person', 1:n_entries)
+
   if (plot) {
-    test_plot <- ggplot(data.table::rbindlist(results), aes(.data$time, .data$Cplasma, color = .data$iteration)) + geom_line()
+    test_plot <- ggplot() + geom_line(data = data.table::rbindlist(results), aes(.data$time, .data$Cplasma, color = .data$iteration, linetype = .data$person))
+    if (plot_average){
+      test_plot <- test_plot +  geom_line(data = average_person, aes(.data$time, .data$Cplasma, linetype = .data$person), color = 'black', linewidth =  0.5) +
+        scale_linetype_manual(values = c('general person' = 'solid', 'average_person' = 'longdash')) +
+        guides(linetype = guide_legend(title = 'Person type'))
+      return(list(numeric = c(results, list('Average Person' = average_person)), plasma_plot = test_plot))
+      }
     return(list(numeric = results, plasma_plot = test_plot))
   }
 
@@ -534,6 +582,23 @@ calc_internal_dose_td <- function(C_ext,
   return(D_int)
 
 }
+
+#' Get population average
+#'
+#' @param params Table of httk model parameters, output from
+#'
+#' @returns Single row data.table of averages of columns
+#' @import data.table
+#' @export
+#'
+#' @examplesIf FALSE
+get_population_average <- function(params = NULL){
+
+  # Cast columns as numeric and return column means
+  return(as.data.frame(t(colMeans(data.table::as.data.table(params)[, lapply(.SD, as.numeric), .SDcols = 1:(length(params))], na.rm = TRUE))))
+}
+
+
 
 #' Load `httk` data
 #'
