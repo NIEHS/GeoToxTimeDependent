@@ -475,7 +475,7 @@ solve_httk_model <- function(chem.cas,
   }
 
   if (plot & plot_average){
-    average_person_param <- get_population_average(parameters)
+    average_person_param <- get_population_statistics(parameters)
     if(!is.null(data.matrix)){
       internal_dose <- data.matrix
       if (standardize){
@@ -583,16 +583,33 @@ calc_internal_dose_td <- function(C_ext,
 
 }
 
-#' Get population average
+#' Get population statistics
 #'
 #' @param params Table of httk model parameters, output from
+#' @param quantiles A vector of quantile values, from 0 to 1. If not supplied,
+#'   the average of each column is returned.
 #'
-#' @returns Single row data.table of averages of columns
+#' @returns Single row data.table of statistics of columns
 #' @import data.table
 #' @export
 #'
 #' @examplesIf FALSE
-get_population_average <- function(params = NULL){
+get_population_statistics <- function(params = NULL,
+                                   quantiles = NULL){
+
+  # check quantile and computed based on quantile values
+  if (!is.null(quantiles)){
+    if (any(quantiles > 1) | any(quantiles < 0)){
+      warning('Removing values outside [0,1] from `quantile` parameter')
+      quantiles <- quantiles[!((quantiles < 0) | (quantiles > 1))]
+    }
+    quantiles <- sort(quantiles)
+
+    # Cast params as numeric and compute quantiles
+    params <- as.data.table(params)[, lapply(.SD, as.numeric), .SDcols = 1:length(params)]
+    return(params[, lapply(.SD, function(t) {stats::quantile(t, na.rm = TRUE, probs = quantiles)}), .SDcols = 1:length(params)])
+  }
+
 
   # Cast columns as numeric and return column means
   return(as.data.frame(t(colMeans(data.table::as.data.table(params)[, lapply(.SD, as.numeric), .SDcols = 1:(length(params))], na.rm = TRUE))))
