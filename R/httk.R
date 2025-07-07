@@ -188,6 +188,9 @@ simulate_css <- function(chem.cas, agelim_years, weight_category,
 #'   number of individuals to sample from each age.
 #' @param weight_category String with values `Normal` or `Obese`.
 #' @param samples Number of CSS values to generate.
+#' @param model This can be 'pbtk', '3compartment', '3compartmentss', or
+#'   '1compartment'. Default for this function is 'pbtk', See documentation for
+#'   `httk::create_mc_samples` for more detailed information.
 #' @param verbose Boolean determining whether to display progress report of
 #'   internal function operations.
 #' @param set_seed Boolean for setting a seed.
@@ -204,6 +207,7 @@ simulate_population_variability_parameters <- function(chem.cas,
                                                        age_matrix = NULL,
                                                        weight_category,
                                                        samples,
+                                                       model = 'pbtk',
                                                        verbose = TRUE,
                                                        set_seed = FALSE,
                                                        seed = 42) {
@@ -250,6 +254,7 @@ simulate_population_variability_parameters <- function(chem.cas,
         suppressWarnings({
           httk::create_mc_samples(chem.cas = chem.cas,
                                   samples = age_matrix[i, sample_col],
+                                  model = model,
                                   httkpop.generate.arg.list = httkpop,
                                   suppress.messages = TRUE)
         }),
