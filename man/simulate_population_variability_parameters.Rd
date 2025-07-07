@@ -10,6 +10,7 @@ simulate_population_variability_parameters(
   age_matrix = NULL,
   weight_category,
   samples,
+  model = "pbtk",
   verbose = TRUE,
   set_seed = FALSE,
   seed = 42
@@ -26,6 +27,10 @@ number of individuals to sample from each age.}
 \item{weight_category}{String with values \code{Normal} or \code{Obese}.}
 
 \item{samples}{Number of CSS values to generate.}
+
+\item{model}{This can be 'pbtk', '3compartment', '3compartmentss', or
+'1compartment'. Default for this function is 'pbtk', See documentation for
+\code{httk::create_mc_samples} for more detailed information.}
 
 \item{verbose}{Boolean determining whether to display progress report of
 internal function operations.}
