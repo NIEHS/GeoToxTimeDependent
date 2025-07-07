@@ -202,7 +202,7 @@ simulation_constant_standard <- solve_httk_model(chem.cas = '87-86-5', parameter
 simulation_constant_standard$plasma_plot
 ```
 
-Finally, we may look at the 'average' person among the population. To do this, we use the `get_population_average()` function to process the average person among the simulated people. This takes the average value for each population parameter.
+Finally, we may look at the 'average' person among the population. To do this, we use the `get_population_statistics()` function to process the average person among the simulated people. This takes the average value for each population parameter.
 
 ```{r}
 average_person <- get_population_statistics(pbtk_param)
