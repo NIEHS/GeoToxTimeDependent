@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(httk)
 library(dplyr)
+library(tidyr)
 library(data.table)
 library(GeoTox)
 library(gganimate)
@@ -283,3 +284,51 @@ gganimate::animate(nc_movie, nframes = 10, fps = 1)
 ```
 
 The sensitivity analysis currently used by GeoTox simulates exposure or uses the stored exposure values. With time-dependent exposure, it may be better to sample from the empirical distribution determined by the exposure data for a given time resolution. This will give `C_ext` values to use within the `compute_sensitivity()` function. Alternatively, instead of using an empirical distribution, one could consider sampling uniformly from the range of exposure values represented by the exposure data as the empirical distribution may correspond to a rare event while the uniform sampling represents a portion of the potential values that are possible.
+
+We begin to formulate the sensitivity due to the external exposure. We compute this by fixing all parameters aside from the external dose, using the 'average' individual among a population of individuals, and examining the effects of the external dose on the blood plasma concentrations and in turn how these affect the dose-response. First, we take determine the average person among the population parameters. Then we run the appropriate httk model on this person, using the external dosing information. The function computes the internal dose and solves the time-dependent httk model on this. We take the blood plasma concentrations from this and use these values for the dose-response. Next, hill parameters associated to the chemical and a given assay are supplied and the dose-response curves are calculated from the internal plasma concentrationvalues. Now, if we were to use this dose-response data as is, the response will follow a similar pattern as the exposure. Instead, we are looking at the incremental changes of the dose-response according to the fixed change in plasma concentration, so we take the absolute value of the incremental differences of the responses.
+
+```{r}
+hill_params <- fit_hill(data.frame(chem = rep(c("87-86-5"), 3),
+                                   logc = c(0, 1, 2),
+                                   resp = c(4, 2, 0) / 10),
+                        chem = "chem")
+
+td_sensitivity_acute <- compute_c_ext_sensitivity(chem.cas = '87-86-5', C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
+td_sensitivity_periodic <- compute_c_ext_sensitivity(chem.cas = '87-86-5', C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
+td_sensitivity_constant <- compute_c_ext_sensitivity(chem.cas = '87-86-5', C_ext = constant_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
+
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_acute[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_periodic[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() +
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_constant[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+
+For a signed version of this, to differentiate increases from decreases in the response curve, we can do the following.
+
+```{r}
+td_sensitivity_acute_signed <- tidyr::pivot_longer(data.table(td_sensitivity_acute[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+td_sensitivity_periodic_signed <- tidyr::pivot_longer(data.table(td_sensitivity_periodic[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+td_sensitivity_constant_signed <- tidyr::pivot_longer(data.table(td_sensitivity_constant[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+ggplot(td_sensitivity_acute_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(td_sensitivity_periodic_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(td_sensitivity_constant_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+
+```
+
