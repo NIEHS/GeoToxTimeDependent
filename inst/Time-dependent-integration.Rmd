@@ -293,9 +293,19 @@ hill_params <- fit_hill(data.frame(chem = rep(c("87-86-5"), 3),
                                    resp = c(4, 2, 0) / 10),
                         chem = "chem")
 
-td_sensitivity_acute <- compute_c_ext_sensitivity(chem.cas = '87-86-5', C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
-td_sensitivity_periodic <- compute_c_ext_sensitivity(chem.cas = '87-86-5', C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
-td_sensitivity_constant <- compute_c_ext_sensitivity(chem.cas = '87-86-5', C_ext = constant_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
+
+
+hill_params_mix <- fit_hill(data.frame(chem = rep(c("87-86-5", "80-05-7"), each = 3),
+                                   logc = c(-1, 0, 1, 0, 1, 2),
+                                   resp = c(10, 5, 0, 4, 2, 0) / 10),
+                        chem = "chem")
+mixture_c_ext <- cbind(acute_dose_matrix, periodic_dose_matrix[, 2])
+dimnames(mixture_c_ext) <- list(NULL, c('time', '87-86-5', '80-05-7'))
+
+td_sensitivity_acute <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
+td_sensitivity_periodic <- compute_c_ext_sensitivity(chem.cas = c('80-05-7'), C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
+td_sensitivity_constant <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
+td_sensitivity_mixture <- compute_c_ext_sensitivity(chem.cas = c('87-86-5', '80-05-7'), C_ext = mixture_c_ext, model_parameters = pbtk_param, hill_params = hill_params_mix, IR = 1)
 
 ggplot(tidyr::pivot_longer(data.table(td_sensitivity_acute[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
@@ -309,6 +319,17 @@ ggplot(tidyr::pivot_longer(data.table(td_sensitivity_constant[[1]])[, lapply(.SD
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
   ggridges::geom_density_ridges() + 
   xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_mixture[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+
+
+
+
+
+
 ```
 
 For a signed version of this, to differentiate increases from decreases in the response curve, we can do the following.
@@ -326,9 +347,13 @@ td_sensitivity_constant_signed <- tidyr::pivot_longer(data.table(td_sensitivity_
   dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
   dplyr::filter(!is.na(increment) & increment >= 1E-15)
 
+td_sensitivity_mixture_signed <- tidyr::pivot_longer(data.table(td_sensitivity_mixture[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
 ggplot(td_sensitivity_acute_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
 ggplot(td_sensitivity_periodic_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
 ggplot(td_sensitivity_constant_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
-
+ggplot(td_sensitivity_mixture_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
 ```
 
