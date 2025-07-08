@@ -620,7 +620,65 @@ get_population_statistics <- function(params = NULL,
   return(as.data.frame(t(colMeans(data.table::as.data.table(params)[, lapply(.SD, as.numeric), .SDcols = 1:(length(params))], na.rm = TRUE))))
 }
 
+compute_c_ext_sensitivity <- function(chem.cas = NULL,
+                                      C_ext = NULL,
+                                      model_parameters = NULL,
+                                      model = 'pbtk',
+                                      hill_params = NULL,
+                                      IR = NULL,
+                                      max_mult = 1){
 
+  if (any(lapply(c(C_ext, model_parameters, hill_params), is.null))){
+    stop('User must input `C_ext`, `model_parameters`, and `hill_params` values!')
+  }
+
+  httk_model <- switch(
+    model,
+    'pbtk' = httk::solve_pbtk,
+    '1comp' = httk::solve_1comp,
+    '3comp' = httk::solve_3comp,
+    'gas_pbtk' = httk::solve_gas_pbtk,
+    'fetal_pbtk' = httk::solve_fetal_pbtk,
+    httk::solve_pbtk
+  )
+
+  print(chem.cas)
+  print(colnames(C_ext))
+
+
+  col_index <- which(colnames(C_ext) == 'time')
+  days <- max(C_ext[, col_index])
+
+  average_person_param <- get_population_statistics(params = model_parameters)
+
+  chem_names <- intersect(chem.cas, colnames(C_ext))
+  print(chem_names)
+
+  internal_dose <- calc_internal_dose_td(C_ext = C_ext,
+                                         IR = IR,
+                                         BW = average_person_param$BW,
+                                         scaling = 1)
+
+  average_person <- as.data.frame(httk_model(chem.cas = chem.cas,
+                                             parameters = average_person_param,
+                                             dosing.matrix = internal_dose,
+                                             suppress.messages = TRUE,
+                                             days = days))
+
+  max_Cplasma <- max(average_person$Cplasma)
+  min_Cplasma <- min(average_person$Cplasma)
+
+  #Cplasma_values <- seq(from = min_Cplasma, to = max_Cplasma, length = 1E3)
+
+  C_invitro <- matrix(average_person$Cplasma, ncol = 1, dimnames = list(NULL, chem.cas))
+
+  resp <- calc_concentration_response(C_invitro = C_invitro,
+                                      hill_params = hill_params,
+                                      max_mult = max_mult,
+                                      fixed = TRUE)
+
+
+}
 
 #' Load `httk` data
 #'
