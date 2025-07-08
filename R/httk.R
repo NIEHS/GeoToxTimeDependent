@@ -654,23 +654,57 @@ compute_c_ext_sensitivity <- function(chem.cas = NULL,
   chem_names <- intersect(chem.cas, colnames(C_ext))
   print(chem_names)
 
-  internal_dose <- calc_internal_dose_td(C_ext = C_ext,
-                                         IR = IR,
-                                         BW = average_person_param$BW,
-                                         scaling = 1)
+  C_invitro <- c()
 
-  average_person <- as.data.frame(httk_model(chem.cas = chem.cas,
-                                             parameters = average_person_param,
-                                             dosing.matrix = internal_dose,
-                                             suppress.messages = TRUE,
-                                             days = days))
+  if (length(chem_names)){
+    for (i in 1:length(chem_names)){
 
-  max_Cplasma <- max(average_person$Cplasma)
-  min_Cplasma <- min(average_person$Cplasma)
+      chem_col_index <- which(colnames(C_ext) == chem_names[[i]])
+      C_ext_temp <- C_ext[, c(col_index, chem_col_index)]
+      colnames(C_ext_temp) <- c('time', 'dose')
 
-  #Cplasma_values <- seq(from = min_Cplasma, to = max_Cplasma, length = 1E3)
+      internal_dose <- calc_internal_dose_td(C_ext = C_ext_temp,
+                                             IR = IR,
+                                             BW = average_person_param$BW,
+                                             scaling = 1)
 
-  C_invitro <- matrix(average_person$Cplasma, ncol = 1, dimnames = list(NULL, chem.cas))
+      average_person <- as.data.frame(httk_model(chem.cas = chem_names[[i]],
+                                                 parameters = average_person_param,
+                                                 dosing.matrix = internal_dose,
+                                                 suppress.messages = TRUE,
+                                                 days = days))
+
+      max_Cplasma <- max(average_person$Cplasma)
+      min_Cplasma <- min(average_person$Cplasma)
+
+      #Cplasma_values <- seq(from = min_Cplasma, to = max_Cplasma, length = 1E3)
+
+      C_invitro <- cbind(C_invitro, matrix(average_person$Cplasma, ncol = 1, dimnames = list(NULL, chem_names[[i]])))
+    }
+  } else if (all(colnames(C_ext) == c('time', 'dose'))) {
+    internal_dose <- calc_internal_dose_td(C_ext = C_ext,
+                                           IR = IR,
+                                           BW = average_person_param$BW,
+                                           scaling = 1)
+
+    average_person <- as.data.frame(httk_model(chem.cas = chem.cas,
+                                               parameters = average_person_param,
+                                               dosing.matrix = internal_dose,
+                                               suppress.messages = TRUE,
+                                               days = days))
+
+    max_Cplasma <- max(average_person$Cplasma)
+    min_Cplasma <- min(average_person$Cplasma)
+
+    #Cplasma_values <- seq(from = min_Cplasma, to = max_Cplasma, length = 1E3)
+
+    C_invitro <- cbind(C_invitro, matrix(average_person$Cplasma, ncol = 1, dimnames = list(NULL, chem.cas)))
+  } else {
+    warning('Please check input parameters `chem.cas` and `C_ext`! Returning an empty list.')
+    return(list())
+  }
+
+
 
   resp <- calc_concentration_response(C_invitro = C_invitro,
                                       hill_params = hill_params,
