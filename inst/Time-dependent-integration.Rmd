@@ -288,37 +288,69 @@ The sensitivity analysis currently used by GeoTox simulates exposure or uses the
 We begin to formulate the sensitivity due to the external exposure. We compute this by fixing all parameters aside from the external dose, using the 'average' individual among a population of individuals, and examining the effects of the external dose on the blood plasma concentrations and in turn how these affect the dose-response. First, we take determine the average person among the population parameters. Then we run the appropriate httk model on this person, using the external dosing information. The function computes the internal dose and solves the time-dependent httk model on this. We take the blood plasma concentrations from this and use these values for the dose-response. Next, hill parameters associated to the chemical and a given assay are supplied and the dose-response curves are calculated from the internal plasma concentrationvalues. Now, if we were to use this dose-response data as is, the response will follow a similar pattern as the exposure. Instead, we are looking at the incremental changes of the dose-response according to the fixed change in plasma concentration, so we take the absolute value of the incremental differences of the responses.
 
 ```{r}
-hill_params <- fit_hill(data.frame(chem = rep(c("87-86-5"), 3),
+# Example Hill parameters are not necessarily realistic
+hill_params_pcp <- fit_hill(data.frame(chem = rep(c("87-86-5"), 3),
                                    logc = c(0, 1, 2),
                                    resp = c(4, 2, 0) / 10),
                         chem = "chem")
 
+hill_params_bpa <- fit_hill(data.frame(chem = rep(c("87-86-5"), 3),
+                                   logc = c(-1, 0, 1),
+                                   resp = c(10, 5, 0) / 10),
+                        chem = "chem")
 
 
 hill_params_mix <- fit_hill(data.frame(chem = rep(c("87-86-5", "80-05-7"), each = 3),
                                    logc = c(-1, 0, 1, 0, 1, 2),
                                    resp = c(10, 5, 0, 4, 2, 0) / 10),
                         chem = "chem")
+
 mixture_c_ext <- cbind(acute_dose_matrix, periodic_dose_matrix[, 2])
 dimnames(mixture_c_ext) <- list(NULL, c('time', '87-86-5', '80-05-7'))
 
-td_sensitivity_acute <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
-td_sensitivity_periodic <- compute_c_ext_sensitivity(chem.cas = c('80-05-7'), C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
-td_sensitivity_constant <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params, IR = 1)
+# Sensitivity for Pentacholorphenol (PCP) 87-86-5 using three exposure scenarios
+td_sensitivity_acute_pcp <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_pcp, IR = 1)
+td_sensitivity_periodic_pcp <- compute_c_ext_sensitivity(chem.cas = c('87-86-7'), C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_pcp, IR = 1)
+td_sensitivity_constant_pcp <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_pcp, IR = 1)
+
+# Sensitivity for Bisphenol A (BPA) 80-05-7 using same three exposure scenarios
+td_sensitivity_acute_bpa <- compute_c_ext_sensitivity(chem.cas = c('80-05-7'), C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_bpa, IR = 1)
+td_sensitivity_periodic_bpa <- compute_c_ext_sensitivity(chem.cas = c('80-05-7'), C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_bpa, IR = 1)
+td_sensitivity_constant_bpa <- compute_c_ext_sensitivity(chem.cas = c('80-05-7'), C_ext = constant_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_bpa, IR = 1)
+
+# Sensitivity for PCP under acute exposure scenario and BPA under periodic exposure scenario
 td_sensitivity_mixture <- compute_c_ext_sensitivity(chem.cas = c('87-86-5', '80-05-7'), C_ext = mixture_c_ext, model_parameters = pbtk_param, hill_params = hill_params_mix, IR = 1)
 
-ggplot(tidyr::pivot_longer(data.table(td_sensitivity_acute[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+
+# Plots for PCP exposure sensitivity
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_acute_pcp[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
   ggridges::geom_density_ridges() + 
   xlab('log10 absolute difference in response')
-ggplot(tidyr::pivot_longer(data.table(td_sensitivity_periodic[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_periodic_pcp[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
   ggridges::geom_density_ridges() +
   xlab('log10 absolute difference in response')
-ggplot(tidyr::pivot_longer(data.table(td_sensitivity_constant[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_constant_pcp[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
   ggridges::geom_density_ridges() + 
   xlab('log10 absolute difference in response')
+
+# Plots for BPA exposures sensitivity
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_acute_bpa[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_periodic_bpa[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() +
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(td_sensitivity_constant_bpa[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# Plot for mixture exposure scenario (Acute for PCP and Periodic for BPA)
 ggplot(tidyr::pivot_longer(data.table(td_sensitivity_mixture[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
   ggridges::geom_density_ridges() + 
@@ -335,25 +367,54 @@ ggplot(tidyr::pivot_longer(data.table(td_sensitivity_mixture[[1]])[, lapply(.SD,
 For a signed version of this, to differentiate increases from decreases in the response curve, we can do the following.
 
 ```{r}
-td_sensitivity_acute_signed <- tidyr::pivot_longer(data.table(td_sensitivity_acute[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+# Signed sensitivity for PCP scenarios
+td_sensitivity_acute_signed_pcp <- tidyr::pivot_longer(data.table(td_sensitivity_acute_pcp[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
   dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
   dplyr::filter(!is.na(increment) & increment >= 1E-15)
 
-td_sensitivity_periodic_signed <- tidyr::pivot_longer(data.table(td_sensitivity_periodic[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+td_sensitivity_periodic_signed_pcp <- tidyr::pivot_longer(data.table(td_sensitivity_periodic_pcp[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
   dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
   dplyr::filter(!is.na(increment) & increment >= 1E-15)
 
-td_sensitivity_constant_signed <- tidyr::pivot_longer(data.table(td_sensitivity_constant[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+td_sensitivity_constant_signed_pcp <- tidyr::pivot_longer(data.table(td_sensitivity_constant_pcp[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
   dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
   dplyr::filter(!is.na(increment) & increment >= 1E-15)
 
+# Signed sensitivity for BPA scenarios
+td_sensitivity_acute_signed_bpa <- tidyr::pivot_longer(data.table(td_sensitivity_acute_bpa[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+td_sensitivity_periodic_signed_bpa <- tidyr::pivot_longer(data.table(td_sensitivity_periodic_bpa[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+td_sensitivity_constant_signed_bpa <- tidyr::pivot_longer(data.table(td_sensitivity_constant_bpa[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+# Signed sensivity for mixture scenario
 td_sensitivity_mixture_signed <- tidyr::pivot_longer(data.table(td_sensitivity_mixture[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
   dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
   dplyr::filter(!is.na(increment) & increment >= 1E-15)
 
-ggplot(td_sensitivity_acute_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
-ggplot(td_sensitivity_periodic_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
-ggplot(td_sensitivity_constant_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+
+# Plots of signed sensitivity for PCP
+ggplot(td_sensitivity_acute_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(td_sensitivity_periodic_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(td_sensitivity_constant_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+
+# Plots of signed sensitivity for BPA
+ggplot(td_sensitivity_acute_signed_bpa, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(td_sensitivity_periodic_signed_bpa, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(td_sensitivity_constant_signed_bpa, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+
+# Plot of signed sensitivity for mixture
 ggplot(td_sensitivity_mixture_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
+
+
+```{r}
+devtools::session_info()
 ```
 
