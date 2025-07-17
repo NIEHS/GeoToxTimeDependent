@@ -620,6 +620,34 @@ get_population_statistics <- function(params = NULL,
   return(as.data.frame(t(colMeans(data.table::as.data.table(params)[, lapply(.SD, as.numeric), .SDcols = 1:(length(params))], na.rm = TRUE))))
 }
 
+#' Sensitivity analysis for time-dependent external concentration
+#'
+#' @param chem.cas A vector containing the CASRN for a single chemical or
+#'   several chemicals in a mixture.
+#' @param C_ext A matrix with external chemical concentration time-series data.
+#'   The column names must either be `time` and `dose` in the case of a single
+#'   chemical or `time` and the CASRN for each chemical in a mixture of several
+#'   chemicals.
+#' @param model_parameters A data.frame of model parameters supplied by the
+#'   functions `parametrize_httk()` representing individuals in a population.
+#' @param model A character string indicating which `httk` model to use, from
+#'   the options 'pbtk', '1comp', '3comp', 'gas_pbtk', 'fetal_pbtk'. The default
+#'   is 'pbtk'.
+#' @param hill_params A data.frame output from the function `fit_hill()`, with
+#'   data corresponding to the chemical(s) contained in the `chem.cas`
+#'   parameter.
+#' @param IR The inhalation rate for the average person of the population given
+#'   by the `model_parameters` input, in \eqn{\frac{m^3}{day}}.
+#' @param max_mult The upper bound multiplier for max response. See
+#'   `calc_concentration_response()` for more details.
+#'
+#' @returns A data.frame consisting of mixture response data from one or several
+#'   chemicals. See `calc_concentration_response()` for more details. For a
+#'   mixture of chemicals, this will be the set of common chemicals contained in
+#'   the `chem.cas`, `C_ext`, and `hill_params` inputs.
+#' @export
+#'
+#' @examplesIf FALSE
 compute_c_ext_sensitivity <- function(chem.cas = NULL,
                                       C_ext = NULL,
                                       model_parameters = NULL,
@@ -644,19 +672,27 @@ compute_c_ext_sensitivity <- function(chem.cas = NULL,
 
   print(chem.cas)
   print(colnames(C_ext))
+  print(hill_params$chem)
 
 
   col_index <- which(colnames(C_ext) == 'time')
+
+  if (length(col_index) != 1){
+    stop('The input matrix `C_ext` must have a single column named `time`!')
+  }
+
   days <- max(C_ext[, col_index])
 
   average_person_param <- get_population_statistics(params = model_parameters)
 
-  chem_names <- intersect(chem.cas, colnames(C_ext))
+  chem_names <- intersect(intersect(chem.cas, colnames(C_ext)), hill_params$chem)
   print(chem_names)
 
   C_invitro <- c()
 
   if (length(chem_names)){
+    # Case where 'C_ext' consists of column `time` and a column for each
+    # chemical concentration given by the associated CASRN
     for (i in 1:length(chem_names)){
 
       chem_col_index <- which(colnames(C_ext) == chem_names[[i]])
@@ -700,7 +736,7 @@ compute_c_ext_sensitivity <- function(chem.cas = NULL,
 
     C_invitro <- cbind(C_invitro, matrix(average_person$Cplasma, ncol = 1, dimnames = list(NULL, chem.cas)))
   } else {
-    warning('Please check input parameters `chem.cas` and `C_ext`! Returning an empty list.')
+    warning('Please check input parameters `chem.cas`, `C_ext`, and `hill_params`! Returning an empty list.')
     return(list())
   }
 
