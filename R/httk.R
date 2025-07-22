@@ -750,6 +750,313 @@ compute_c_ext_sensitivity <- function(chem.cas = NULL,
 
 }
 
+
+#' Time resolution sensitivity analysis for time-dependent external
+#' concentration
+#'
+#' @param chem.cas A vector containing the CASRN for a single chemical or
+#'   several chemicals in a mixture.
+#' @param C_ext A matrix with external chemical concentration time-series data.
+#'   The column names must either be `time` and `dose` in the case of a single
+#'   chemical or `time` and the CASRN for each chemical in a mixture of several
+#'   chemicals.
+#' @param model_parameters A data.frame of model parameters supplied by the
+#'   functions `parametrize_httk()` representing individuals in a population.
+#' @param model A character string indicating which `httk` model to use, from
+#'   the options 'pbtk', '1comp', '3comp', 'gas_pbtk', 'fetal_pbtk'. The default
+#'   is 'pbtk'.
+#' @param hill_params A data.frame output from the function `fit_hill()`, with
+#'   data corresponding to the chemical(s) contained in the `chem.cas`
+#'   parameter.
+#' @param IR The inhalation rate for the average person of the population given
+#'   by the `model_parameters` input, in \eqn{\frac{m^3}{day}}.
+#' @param max_mult The upper bound multiplier for max response. See
+#'   `calc_concentration_response()` for more details.
+#' @param resolutions Time resolutions to subdivide the time-series data. These
+#'   are positive numeric values, with units in days.
+#' @param sample The values in `resolutions` divide the entire time-series data
+#'   and `sample` determine which time point to use for each interval. The valid
+#'   options are 'left', 'right', 'center', with a default value of 'left'.
+#'
+#' @returns A named list with entries corresponding to a data.frame consisting
+#'   of mixture response data from one or several chemicals. See
+#'   `compute_c_ext_sensitivity()` for more details on the structure of each
+#'   entry. The names are the valid time resolutions given by the `resolutions`
+#'   parameter.
+#' @export
+#'
+#' @examplesIf FALSE
+compute_time_resolution_sensitivity <- function(chem.cas = NULL,
+                                                C_ext = NULL,
+                                                model_parameters = NULL,
+                                                model = 'pbtk',
+                                                hill_params = NULL,
+                                                IR = NULL,
+                                                max_mult = 1,
+                                                resolutions = NULL,
+                                                sample = 'left'){
+
+  if(is.null(resolutions) | !all(sapply(resolutions, is.numeric))){
+    stop('Please input numeric values for parameter `resolution`!')
+  }
+
+  resolutions <- resolutions[resolutions > 0]
+
+  if (!length(resolutions)){
+    stop('Values for `resolutions` parameter must be positive!')
+  }
+
+  # Isolate the column of time values
+  col_t <- which(colnames(C_ext) == 'time')
+  times <- C_ext[, col_t]
+
+  min_timestep <- min(diff(times))
+
+  # Determine the time range
+  start_time <- min(times)
+  end_time <- max(times)
+
+  # Remove any resolutions that exceed the max time. Stop if none exist.
+  if (any(resolutions < end_time)){
+    resolutions <- resolutions[resolutions < end_time]
+  } else {
+    stop('Values in `resolutions` must not exceed final timepoint of time-series!')
+  }
+
+  # Remove any resolutions that are below the minimum timestep. Stop if none exist.
+  if (any(resolutions > min_timestep)){
+    resolutions <- resolutions[resolutions > min_timestep]
+  } else {
+    stop('Values in `resolutions` must be greater than minimum timestep of time-series!')
+  }
+
+
+  # Determine the length of each time-series based on the resolution Take the
+  # total elapsed time, divide by the resolution, take the ceiling to ensure
+  # integral number of repetitions
+  repetitions <- ceiling((end_time - start_time)/resolutions) + 1
+
+  trials <- length(repetitions)
+
+  trial_data <- list()
+
+  for (i in 1:trials){
+    temp_times <- seq(from = start_time, by = resolutions[[i]], length = repetitions[[i]])
+    temp_times <- temp_times[temp_times <= end_time]
+
+
+    # Sample values
+    if (sample == 'left'){
+      sample_times <- times[sapply(temp_times, function(t) {which.min(times < t)})]
+      sample_index <- which(times %in% sample_times)
+      dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
+    } else if (sample == 'right') {
+      sample_times <- sapply(c(temp_times[-1], end_time + 1), function(t) {utils::tail(times[times < t], 1)})
+      sample_index <- which(times %in% sample_times)
+      dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
+    } else if (sample == 'center') {
+      left_times <- times[sapply(temp_times, function(t) {which.min(times < t)})]
+      left_indices <- which(times %in% left_times)
+      right_times <- sapply(c(temp_times[-1], end_time + 1), function(t) {utils::tail(times[times < t], 1)})
+      right_indices <- which(times %in% right_times)
+      central_indices <- ceiling((right_indices + left_indices)/2)
+      dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[central_indices, -col_t])
+    } else {
+      warning("Invalid option selected for `sample`, defaulting to 'left'!")
+      sample_times <- times[sapply(temp_times, function(t) {which.min(times < t)})]
+      sample_index <- which(times %in% sample_times)
+      dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
+    }
+    temp_trial <- compute_c_ext_sensitivity(chem.cas = chem.cas,
+                                            C_ext = dose_matrix,
+                                            model_parameters = model_parameters,
+                                            model = model,
+                                            hill_params = hill_params,
+                                            IR = IR,
+                                            max_mult = max_mult)
+    trial_data[[i]] <- temp_trial
+  }
+
+  names(trial_data) <- resolutions
+  return(trial_data)
+}
+
+time_resolution_variation <- function(chem.cas,
+                                      model = 'pbtk',
+                                      parameters = NULL,
+                                      plot = TRUE,
+                                      C_ext = NULL,
+                                      input.units = 'mg/kg',
+                                      output.units = 'uM',
+                                      timestep = NULL,
+                                      IR = NULL,
+                                      standardize = TRUE,
+                                      plot_average = FALSE,
+                                      resolutions = NULL,
+                                      sample = 'left'){
+  if(is.null(resolutions) | !all(sapply(resolutions, is.numeric))){
+    stop('Please input numeric values for parameter `resolution`!')
+  }
+
+  resolutions <- resolutions[resolutions > 0]
+
+  if (!length(resolutions)){
+    stop('Values for `resolutions` parameter must be positive!')
+  }
+
+  # Isolate the column of time values
+  col_t <- which(colnames(C_ext) == 'time')
+  times <- C_ext[, col_t]
+
+  min_timestep <- min(diff(times))
+
+  # Determine the time range
+  start_time <- min(times)
+  end_time <- max(times)
+
+  # Remove any resolutions that exceed the max time. Stop if none exist.
+  if (any(resolutions < end_time)){
+    resolutions <- resolutions[resolutions < end_time]
+  } else {
+    stop('Values in `resolution` must not exceed final timepoint of time-series!')
+  }
+
+  # Remove any resolutions that are below the minimum timestep. Stop if none exist.
+  if (any(resolutions > min_timestep)){
+    resolutions <- resolutions[resolutions > min_timestep]
+  } else {
+    stop('Values in `resolutions` must be greater than minimum timestep of time-series!')
+  }
+
+  # Determine the length of each time-series based on the resolution Take the
+  # total elapsed time, divide by the resolution, take the ceiling to ensure
+  # integral number of repetitions
+  repetitions <- ceiling((end_time - start_time)/resolutions) + 1
+
+  trials <- length(repetitions)
+
+  trial_data <- list()
+
+  for (i in 1:trials){
+    temp_times <- seq(from = start_time, by = resolutions[[i]], length = repetitions[[i]])
+    temp_times <- temp_times[temp_times <= end_time]
+
+
+    # Sample values
+    if (sample == 'left'){
+      sample_times <- times[sapply(temp_times, function(t) {which.min(times < t)})]
+      sample_index <- which(times %in% sample_times)
+      dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
+    } else if (sample == 'right') {
+      sample_times <- sapply(c(temp_times[-1], end_time + 1), function(t) {utils::tail(times[times < t], 1)})
+      sample_index <- which(times %in% sample_times)
+      dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
+    } else if (sample == 'center') {
+      left_times <- times[sapply(temp_times, function(t) {which.min(times < t)})]
+      left_indices <- which(times %in% left_times)
+      right_times <- sapply(c(temp_times[-1], end_time + 1), function(t) {utils::tail(times[times < t], 1)})
+      right_indices <- which(times %in% right_times)
+      central_indices <- ceiling((right_indices + left_indices)/2)
+      dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[central_indices, -col_t])
+    } else {
+      warning("Invalid option selected for `sample`, defaulting to 'left'!")
+      sample_times <- times[sapply(temp_times, function(t) {which.min(times < t)})]
+      sample_index <- which(times %in% sample_times)
+      dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
+    }
+
+    print(colnames(dose_matrix))
+    print(colnames(C_ext))
+
+    colnames(dose_matrix) <- c('time', colnames(C_ext)[-col_t])
+    print(colnames(dose_matrix))
+
+    temp_trial <- solve_httk_model(chem.cas = chem.cas,
+                                   model = model,
+                                   parameters = parameters,
+                                   plot = plot,
+                                   data.matrix = dose_matrix,
+                                   input.units = input.units,
+                                   output.units = output.units,
+                                   timestep = timestep,
+                                   IR = IR,
+                                   standardize = standardize,
+                                   plot_average = plot_average)
+
+
+
+    trial_data[[i]] <- temp_trial
+  }
+
+  names(trial_data) <- resolutions
+  return(trial_data)
+
+}
+
+
+#' Combine dosing data from multiple pathways
+#'
+#' @param dosing_matrices List of matrices, each representing a time-series of
+#'   chemical exposure.
+#'
+#' @returns A matrix with two columns, `time` and `dose`, which totals all the
+#'   chemical exposures across all time points in the time-series exposure data.
+#' @export
+#'
+#' @examplesIf FALSE
+#' a <- matrix(c(seq(from = 0, to = 1, by = .1), 20*exp(-1*0:10)),
+#'  ncol = 2, dimnames = list(NULL, c('time', 'dose')))
+#' b <- matrix(c(seq(from = 0, to = 1, by = 1/6), 1:7),
+#' ncol = 2, dimnames = list(NULL, c('time', 'dose')))
+#' c <- combine_dosing_pathways(dosing_matrices = list(a,b))
+#' c
+combine_dosing_pathways <- function(dosing_matrices = NULL){
+  # Check that input is not NULL
+  if (is.null(dosing_matrices)){
+    stop('Must input a list of matrices!')
+  }
+
+  # Cast input as list
+  if (!is.list(dosing_matrices)){
+    dosing_matrices <- list(dosing_matrices)
+  }
+
+  matrix_indices <- which(sapply(dosing_matrices, function(t) {'matrix' %in% class(t)}))
+
+
+  times <- c()
+  for (i in matrix_indices){
+    temp_matrix <- dosing_matrices[[i]]
+    time_col <- which(colnames(temp_matrix) == 'time')
+    times <- unique(c(times, temp_matrix[, time_col]))
+  }
+
+  times <- sort(times)
+
+
+  all_doses <- matrix(times, ncol = 1, dimnames = list(NULL, c('time')))
+
+  doses <- rep(0, length(times))
+
+  for (i in matrix_indices){
+    temp_matrix <- dosing_matrices[[i]]
+    time_col <- which(colnames(temp_matrix) == 'time')
+    dose_col <- which(colnames(temp_matrix) == 'dose')
+    dosing_index <- which(times %in% temp_matrix[, time_col])
+    doses[dosing_index] <- temp_matrix[, dose_col]
+    new_doses <- matrix(doses, ncol = 1, dimnames = list(NULL, paste0('route_', i)))
+    all_doses <- cbind(all_doses, new_doses)
+    doses <- rep(0, length(times))
+  }
+
+  row_sums <- apply(all_doses[, -1], 1, sum)
+
+  final_dose <- matrix(c(times, row_sums), ncol = 2, dimnames = list(NULL, c('dose', 'time')))
+  return(final_dose)
+}
+
+
+
 #' Load `httk` data
 #'
 #' This function loads in extended `httk` data and toggles the option
