@@ -7,5 +7,6 @@
 #' @importFrom rlang .env
 #' @importFrom sf st_as_sf
 #' @importFrom stats median
+#' @importFrom utils tail
 ## usethis namespace: end
 NULL
