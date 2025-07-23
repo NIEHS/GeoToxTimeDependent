@@ -867,6 +867,16 @@ compute_time_resolution_sensitivity <- function(chem.cas = NULL,
       sample_index <- which(times %in% sample_times)
       dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
     }
+
+    print(colnames(dose_matrix))
+    print(colnames(C_ext))
+
+    colnames(dose_matrix) <- c('time', colnames(C_ext)[-col_t])
+    print(colnames(dose_matrix))
+
+
+
+
     temp_trial <- compute_c_ext_sensitivity(chem.cas = chem.cas,
                                             C_ext = dose_matrix,
                                             model_parameters = model_parameters,
