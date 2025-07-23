@@ -413,6 +413,119 @@ ggplot(td_sensitivity_constant_signed_bpa, aes(x = log10(increment), y = name, c
 ggplot(td_sensitivity_mixture_signed, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
 ```
 
+We also can examine how sensitive the simulations are to changes in the time resolution. While more frequent readings of ambient air concentrations support more accurate modelling efforts, one may be limited to less frequent readings. How the differences in time resolution impact the blood-plasma concentration and in turn the dose response may in turn inform what time resolution is required for accurate modelling. 
+
+We examine the acute, periodic, and constant exposure scenarios under different time resolutions to determine the effects of these resolutions on the plasma concentration values. Note that in each of these scenarios, the time resolution is by the hour, so roughly 0.0416 days. We examine the resolutions of .1, 1, and 2 days.
+
+```{r}
+acute_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, C_ext = acute_dose_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.001, .01, .1, 1, 2), sample = 'left')
+
+periodic_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, C_ext = periodic_dose_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.001, .01, .1, 1, 2), sample = 'left')
+  
+constant_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pbtk_param, plot = TRUE, C_ext = constant_dose_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.001, .01, .1, 1, 2), sample = 'left')
+```
+We examine the plots. First the acute exposure scenario.
+
+```{r}
+acute_standard_variability$`0.1`$plasma_plot
+acute_standard_variability$`1`$plasma_plot
+acute_standard_variability$`2`$plasma_plot
+```
+
+The periodic scenario.
+
+```{r}
+periodic_standard_variability$`0.1`$plasma_plot
+periodic_standard_variability$`1`$plasma_plot
+periodic_standard_variability$`2`$plasma_plot
+```
+
+And the constant scenario.
+
+```{r}
+constant_standard_variability$`0.1`$plasma_plot
+constant_standard_variability$`1`$plasma_plot
+constant_standard_variability$`2`$plasma_plot
+```
+We can dig further into the data by looking at the AUC of each person in each time resolution and exposure scenario. We compare with the original run without time resolution modification.
+
+First for the acute scenario.
+
+```{r}
+summary(sapply(acute_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}))
+summary(sapply(acute_standard_variability$`1`$numeric, function(t) {max(t$AUC)}))
+summary(sapply(acute_standard_variability$`2`$numeric, function(t) {max(t$AUC)}))
+
+summary(sapply(simulation_acute_standard_average$numeric, function(t) {max(t$AUC)}))
+```
+The periodic scenario.
+
+```{r}
+summary(sapply(periodic_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}))
+summary(sapply(periodic_standard_variability$`1`$numeric, function(t) {max(t$AUC)}))
+summary(sapply(periodic_standard_variability$`2`$numeric, function(t) {max(t$AUC)}))
+
+summary(sapply(simulation_periodic_standard_average$numeric, function(t) {max(t$AUC)}))
+```
+And finally for the constant scenario.
+
+```{r}
+summary(sapply(constant_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}))
+summary(sapply(constant_standard_variability$`1`$numeric, function(t) {max(t$AUC)}))
+summary(sapply(constant_standard_variability$`2`$numeric, function(t) {max(t$AUC)}))
+
+summary(sapply(simulation_constant_standard_average$numeric, function(t) {max(t$AUC)}))
+```
+We also examine the effects of varying the time resolution on the mixture sensitivity.
+
+```{r}
+time_resolution_mixture_response <- compute_time_resolution_sensitivity(chem.cas = c('87-86-5', '80-05-7'), C_ext = mixture_c_ext, model_parameters = pbtk_param, hill_params = hill_params_mix, IR = 1, resolutions = c(.1, 1, 2), sample = 'left')
+```
+We examine the results.
+
+```{r}
+# For the 0.1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_mixture_response$`0.1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_mixture_response$`1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 2 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_mixture_response$`2`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+
+And again we examine the signed versions.
+
+```{r}
+# Process the data
+resolution_sensitivity_mixture_signed_0.1 <- tidyr::pivot_longer(data.table(time_resolution_mixture_response$`0.1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_mixture_signed_1 <- tidyr::pivot_longer(data.table(time_resolution_mixture_response$`1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_mixture_signed_2 <- tidyr::pivot_longer(data.table(time_resolution_mixture_response$`2`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+# Plot the data
+ggplot(resolution_sensitivity_mixture_signed_0.1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_mixture_signed_1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_mixture_signed_2, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
+
+
 
 ```{r}
 devtools::session_info()
