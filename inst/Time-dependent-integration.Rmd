@@ -452,30 +452,137 @@ We can dig further into the data by looking at the AUC of each person in each ti
 First for the acute scenario.
 
 ```{r}
-summary(sapply(acute_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}))
-summary(sapply(acute_standard_variability$`1`$numeric, function(t) {max(t$AUC)}))
-summary(sapply(acute_standard_variability$`2`$numeric, function(t) {max(t$AUC)}))
+acute_variability_stats <- data.table('individual' = 1:101,
+                                      '0.1' = sapply(acute_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}),
+                                      '1' = sapply(acute_standard_variability$`1`$numeric, function(t) {max(t$AUC)}),
+                                      '2' = sapply(acute_standard_variability$`2`$numeric, function(t) {max(t$AUC)}),
+                                      'unadjusted' = sapply(simulation_acute_standard_average$numeric, function(t) {max(t$AUC)}))
+acute_variability_long <- tidyr::pivot_longer(acute_variability_stats, cols = -1)
 
-summary(sapply(simulation_acute_standard_average$numeric, function(t) {max(t$AUC)}))
+summary(acute_variability_stats[, 2])
+summary(acute_variability_stats[, 3])
+summary(acute_variability_stats[, 4])
+summary(acute_variability_stats[, 5])
+
+ggplot(acute_variability_long, aes(x = value, y = name, color = name, fill = name)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC value') + labs(fill = 'Time resolution in days', color = 'Time resolution in days')
+
 ```
 The periodic scenario.
 
 ```{r}
-summary(sapply(periodic_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}))
-summary(sapply(periodic_standard_variability$`1`$numeric, function(t) {max(t$AUC)}))
-summary(sapply(periodic_standard_variability$`2`$numeric, function(t) {max(t$AUC)}))
+periodic_variability_stats <- data.table('individual' = 1:101,
+                                         '0.1' = sapply(periodic_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}),
+                                         '1' = sapply(periodic_standard_variability$`1`$numeric, function(t) {max(t$AUC)}),
+                                         '2' = sapply(periodic_standard_variability$`2`$numeric, function(t) {max(t$AUC)}),
+                                         'unadjusted' = sapply(simulation_periodic_standard_average$numeric, function(t) {max(t$AUC)}))
 
-summary(sapply(simulation_periodic_standard_average$numeric, function(t) {max(t$AUC)}))
+periodic_variability_long <- tidyr::pivot_longer(periodic_variability_stats, cols = -1)
+
+summary(periodic_variability_stats[, 2])
+summary(periodic_variability_stats[, 3])
+summary(periodic_variability_stats[, 4])
+summary(periodic_variability_stats[, 5])
+
+ggplot(periodic_variability_long, aes(x = value, y = name, color = name, fill = name)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC value') + labs(fill = 'Time resolution in days', color = 'Time resolution in days')
 ```
 And finally for the constant scenario.
 
 ```{r}
-summary(sapply(constant_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}))
-summary(sapply(constant_standard_variability$`1`$numeric, function(t) {max(t$AUC)}))
-summary(sapply(constant_standard_variability$`2`$numeric, function(t) {max(t$AUC)}))
+constant_variability_stats <- data.table('individual' = 1:101,
+                                         '0.1' = sapply(constant_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}),
+                                         '1' = sapply(constant_standard_variability$`1`$numeric, function(t) {max(t$AUC)}),
+                                         '2' = sapply(constant_standard_variability$`2`$numeric, function(t) {max(t$AUC)}),
+                                         'unadjusted' = sapply(simulation_constant_standard_average$numeric, function(t) {max(t$AUC)}))
 
-summary(sapply(simulation_constant_standard_average$numeric, function(t) {max(t$AUC)}))
+constant_variability_long <- tidyr::pivot_longer(constant_variability_stats, cols = -1)
+
+summary(constant_variability_stats[, 2])
+summary(constant_variability_stats[, 3])
+summary(constant_variability_stats[, 4])
+summary(constant_variability_stats[, 5])
+
+ggplot(constant_variability_long, aes(x = value, y = name, color = name, fill = name)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC value') + labs(fill = 'Time resolution in days', color = 'Time resolution in days')
 ```
+We compute the effects of varying time resolution on the same chemical exposure scenario for a single chemical.
+
+```{r}
+time_resolution_acute_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_bpa, IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
+time_resolution_periodic_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_bpa, IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
+time_resolution_constant_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = constant_dose_matrix, model_parameters = pbtk_param, hill_params = hill_params_bpa, IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
+```
+
+Plot the sensitivity for the different scenarios.
+
+Acute exposure.
+
+```{r}
+# For the 0.1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_standard_response$`0.1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_standard_response$`1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 2 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_standard_response$`2`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+
+Periodic exposure.
+
+```{r}
+# For the 0.1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_periodic_standard_response$`0.1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_periodic_standard_response$`1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 2 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_periodic_standard_response$`2`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+
+Constant exposure.
+
+```{r}
+# For the 0.1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_constant_standard_response$`0.1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_constant_standard_response$`1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 2 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_constant_standard_response$`2`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+We also plot the signed versions of these.
+
+
+
+
 We also examine the effects of varying the time resolution on the mixture sensitivity.
 
 ```{r}
