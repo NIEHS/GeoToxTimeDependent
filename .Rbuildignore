@@ -17,6 +17,6 @@
 ^CRAN-SUBMISSION$
 \.RDatatmp$
 \.RDatatmp1$
-^\\inst\\data_discrepancies.R$
-^\\inst\\Time-dependent-integration.html$
-^\\inst\\Time-dependent-integration.Rmd$
+inst/data_discrepancies\.R$
+inst/Time-dependent-integration\.html$
+inst/Time-dependent-integration\.Rmd$
