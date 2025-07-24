@@ -467,6 +467,16 @@ summary(acute_variability_stats[, 5])
 ggplot(acute_variability_long, aes(x = value, y = name, color = name, fill = name)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC value') + labs(fill = 'Time resolution in days', color = 'Time resolution in days')
 
 ```
+To delve deeper into these distributions of AUC values, we use the Kolmogorov-Smirnov test to determine which of these pairs of distributions may be significantly different.
+
+Acute scenario KS tests.
+
+```{r}
+ks.test(x = acute_variability_stats$`0.1`, y = acute_variability_stats$unadjusted)
+ks.test(x = acute_variability_stats$`1`, y = acute_variability_stats$unadjusted)
+ks.test(x = acute_variability_stats$`2`, y = acute_variability_stats$unadjusted)
+```
+
 The periodic scenario.
 
 ```{r}
@@ -485,6 +495,15 @@ summary(periodic_variability_stats[, 5])
 
 ggplot(periodic_variability_long, aes(x = value, y = name, color = name, fill = name)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC value') + labs(fill = 'Time resolution in days', color = 'Time resolution in days')
 ```
+
+Periodic scenario KS tests.
+
+```{r}
+ks.test(x = periodic_variability_stats$`0.1`, y = periodic_variability_stats$unadjusted)
+ks.test(x = periodic_variability_stats$`1`, y = periodic_variability_stats$unadjusted)
+ks.test(x = periodic_variability_stats$`2`, y = periodic_variability_stats$unadjusted)
+```
+
 And finally for the constant scenario.
 
 ```{r}
@@ -503,6 +522,16 @@ summary(constant_variability_stats[, 5])
 
 ggplot(constant_variability_long, aes(x = value, y = name, color = name, fill = name)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC value') + labs(fill = 'Time resolution in days', color = 'Time resolution in days')
 ```
+
+Constant scenario.
+
+```{r}
+ks.test(x = constant_variability_stats$`0.1`, y = constant_variability_stats$unadjusted)
+ks.test(x = constant_variability_stats$`1`, y = constant_variability_stats$unadjusted)
+ks.test(x = constant_variability_stats$`2`, y = constant_variability_stats$unadjusted)
+```
+
+
 We compute the effects of varying time resolution on the same chemical exposure scenario for a single chemical.
 
 ```{r}
@@ -578,9 +607,75 @@ ggplot(tidyr::pivot_longer(data.table(time_resolution_constant_standard_response
   ggridges::geom_density_ridges() + 
   xlab('log10 absolute difference in response')
 ```
-We also plot the signed versions of these.
+
+We also plot the signed versions of these sensitivity analyses.
+
+Acute exposure.
+
+```{r}
+# Process the data
+resolution_sensitivity_acute_signed_0.1 <- tidyr::pivot_longer(data.table(time_resolution_acute_standard_response$`0.1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_acute_signed_1 <- tidyr::pivot_longer(data.table(time_resolution_acute_standard_response$`1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_acute_signed_2 <- tidyr::pivot_longer(data.table(time_resolution_acute_standard_response$`2`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+# Plot the data
+ggplot(resolution_sensitivity_acute_signed_0.1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_acute_signed_1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_acute_signed_2, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
+
+Periodic exposure.
 
 
+```{r}
+# Process the data
+resolution_sensitivity_periodic_signed_0.1 <- tidyr::pivot_longer(data.table(time_resolution_periodic_standard_response$`0.1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_periodic_signed_1 <- tidyr::pivot_longer(data.table(time_resolution_periodic_standard_response$`1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_periodic_signed_2 <- tidyr::pivot_longer(data.table(time_resolution_periodic_standard_response$`2`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+# Plot the data
+ggplot(resolution_sensitivity_periodic_signed_0.1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_periodic_signed_1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_periodic_signed_2, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
+
+Constant exposure.
+
+```{r}
+# Process the data
+resolution_sensitivity_constant_signed_0.1 <- tidyr::pivot_longer(data.table(time_resolution_constant_standard_response$`0.1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_constant_signed_1 <- tidyr::pivot_longer(data.table(time_resolution_constant_standard_response$`1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_constant_signed_2 <- tidyr::pivot_longer(data.table(time_resolution_constant_standard_response$`2`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+# Plot the data
+ggplot(resolution_sensitivity_constant_signed_0.1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_constant_signed_1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_constant_signed_2, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
 
 
 We also examine the effects of varying the time resolution on the mixture sensitivity.
