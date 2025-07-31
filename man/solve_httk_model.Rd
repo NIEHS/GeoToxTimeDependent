@@ -31,7 +31,11 @@ Each row corresponds to a unique individual.}
 concentration vs time.}
 
 \item{data.matrix}{Alternate parameter to supply time and dose information,
-with columns \code{time} and \code{dose}.}
+with columns \code{time} and \code{dose}. If the \code{standarize} parameter is set to
+true, then the dose should be in units of \eqn{\frac{mg}{m^3}} and the
+\code{input.units} parameter will be automatically set to \eqn{\frac{mg}{kg}}.
+Otherwise, if the \code{standardize} parameter is set to FALSE, the \code{dose} units
+should match the \code{input.unit} parameter.}
 
 \item{input.units}{Set of units for input dose. See documentation for \code{httk}
 models for more information.}
