@@ -175,7 +175,7 @@ acute_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
-Observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.03 - 0.04, while  for those in the 40-49 cohort the values are from 0.04-0.06, and for 70-79 the valuesare 0.05-0.11.
+Observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 1.5 - 2.0, while  for those in the 40-49 cohort the values are from 2.0 - 3.0, and for 70-79 the values are 2.0 - 6.0.
 
 We dig into the numerics with the following.
 
@@ -210,7 +210,7 @@ periodic_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
-Again observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 and 40-49 cohorts have a peak blood plasma concentration between 0.0075 - 0.01, while for those in the 70-79 cohort have the values exceeding 0.01.
+Again observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 and 40-49 cohorts have a peak blood plasma concentration between 0.35 - 0.45, while for those in the 70-79 cohort have the values exceeding 0.4.
 
 We dig into the numerics with the following.
 
@@ -246,7 +246,7 @@ constant_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
-As with the previous exposure scenarios, there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.0075 - 0.00825, while  for those in the 40-49 cohort the values are from 0.0075-0.01, and for 70-79 the valuesare 0.01-0.0125.
+As with the previous exposure scenarios, there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.3 - 0.4, while  for those in the 40-49 cohort the values are from 0.35 - 0.45, and for 70-79 the values are 0.4-0.5.
 
 We dig into the numerics with the following.
 
@@ -294,7 +294,7 @@ acute_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
 
 
-Observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.02 - 0.03, while  for those in the 40-49 cohort the values are from 0.02-0.035, and for 70-79 the values are 0.02-0.025.
+Observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.8 - 1.3, while  for those in the 40-49 cohort the values are from 1.0 - 1.6, and for 70-79 the values are 0.8 - 1.2.
 
 We dig into the numerics with the following.
 
@@ -329,7 +329,7 @@ periodic_bpa_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_bpa_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
-Again observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 and 40-49 cohorts have values between 0.00175 and 0.0025, while for those in the 70-79 cohort have the values between 0.02 and 0.03.
+Again observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 and 40-49 cohorts have values between 0.08 and 0.12, while for those in the 70-79 cohort have the values between 0.825 and 0.15.
 
 We dig into the numerics with the following.
 
@@ -365,7 +365,7 @@ constant_bpa_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_bpa_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
-As with the previous exposure scenarios, there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.0015 and 0.00175, while  for those in the 40-49 cohort the values are from 0.0015-0.02, and for 70-79 the valuesare 0.02-0.025.
+As with the previous exposure scenarios, there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.075 - 0.0825, and similarly so for those in the 40-49 cohort, and for 70-79 the values are 0.075 - 0.1.
 
 We dig into the numerics with the following.
 
