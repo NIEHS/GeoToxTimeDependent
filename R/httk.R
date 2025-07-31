@@ -299,7 +299,8 @@ simulate_population_variability_parameters <- function(chem.cas,
     warning(paste0("simulate_population_variability_parameters failed to generate data for CASN ", chem.cas))
     list(NA)
   } else {
-    mcs
+    mcs <- cbind(mcs, data.frame(chem.cas = rep(chem.cas, samples)))
+    return(mcs)
   }
 }
 
@@ -337,7 +338,7 @@ parametrize_httk <- function(chem.cas,
   col_intersect <- intersect(names(mcs), names(model_params))
   print(col_intersect)
 
-  print(mcs[1,])
+  #print(mcs[1,])
 
   model_params <- model_params |> dplyr::select(-col_intersect)
 
@@ -345,7 +346,7 @@ parametrize_httk <- function(chem.cas,
     col_intersect <- c(col_intersect, 'age')
   }
 
-  model_params <- cbind(model_params, mcs |> dplyr::select(col_intersect))
+  model_params <- cbind(model_params, mcs |> dplyr::select(c(col_intersect, 'chem.cas')))
 
 
   #model_params[[col_intersect]] <- as.data.frame(mcs)[[col_intersect]]
@@ -364,7 +365,11 @@ parametrize_httk <- function(chem.cas,
 #' @param plot Boolean to determine whether to create a plot of blood plasma
 #'   concentration vs time.
 #' @param data.matrix Alternate parameter to supply time and dose information,
-#'   with columns `time` and `dose`.
+#'   with columns `time` and `dose`. If the `standarize` parameter is set to
+#'   true, then the dose should be in units of \eqn{\frac{mg}{m^3}} and the
+#'   `input.units` parameter will be automatically set to \eqn{\frac{mg}{kg}}.
+#'   Otherwise, if the `standardize` parameter is set to FALSE, the `dose` units
+#'   should match the `input.unit` parameter.
 #' @param input.units Set of units for input dose. See documentation for `httk`
 #'   models for more information.
 #' @param output.units Set of units for output dose. See documentation for
@@ -451,6 +456,7 @@ solve_httk_model <- function(chem.cas,
                                                BW = parameters$BW[[i]],
                                                scaling = 1, # Placeholder until this can be determined
                                                timestep = timestep)
+        input.units = 'mg/kg'
       }
 
       #print(paste('Iteration', i, 'internal dose', internal_dose[25:29,2]))
@@ -694,6 +700,8 @@ compute_c_ext_sensitivity <- function(chem.cas = NULL,
     # Case where 'C_ext' consists of column `time` and a column for each
     # chemical concentration given by the associated CASRN
     for (i in 1:length(chem_names)){
+      current_chemical_parameters <- model_parameters |> dplyr::filter(chem.cas == chem_names[[i]])
+      print(dim(current_chemical_parameters))
 
       chem_col_index <- which(colnames(C_ext) == chem_names[[i]])
       C_ext_temp <- C_ext[, c(col_index, chem_col_index)]
