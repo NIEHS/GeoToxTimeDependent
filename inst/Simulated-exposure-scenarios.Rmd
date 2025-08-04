@@ -286,7 +286,9 @@ acute_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(acute_pcp_20$numeric, acute_pcp_40$numeric, acute_pcp_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(acute_pcp_20$numeric, acute_pcp_40$numeric, acute_pcp_70$numeric), function(t) {max(t$AUC)}),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Acute')
+                             BW = c(twenties_pcp$BW, mean(twenties_pcp$BW), fourties_pcp$BW, mean(fourties_pcp$BW), seventies_pcp$BW, mean(seventies_pcp$BW)),
+                             Scenario = 'Acute',
+                             Weight = 'Normal')
 
 ggplot(acute_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(acute_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -298,8 +300,10 @@ From the density plots, we observe that the older cohorts do have more mass at h
 acute_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(acute_pcp_ob_20$numeric, acute_pcp_ob_40$numeric, acute_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(acute_pcp_ob_20$numeric, acute_pcp_ob_40$numeric, acute_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_pcp_ob$BW, mean(twenties_pcp_ob$BW), fourties_pcp_ob$BW, mean(fourties_pcp_ob$BW), seventies_pcp_ob$BW, mean(seventies_pcp_ob$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Acute')
+                             Scenario = 'Acute',
+                             Weight = 'Obese')
 
 ggplot(acute_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(acute_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -339,8 +343,10 @@ We dig into the numerics with the following.
 periodic_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(periodic_pcp_20$numeric, periodic_pcp_40$numeric, periodic_pcp_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(periodic_pcp_20$numeric, periodic_pcp_40$numeric, periodic_pcp_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_pcp$BW, mean(twenties_pcp$BW), fourties_pcp$BW, mean(fourties_pcp$BW), seventies_pcp$BW, mean(seventies_pcp$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Periodic')
+                             Scenario = 'Periodic',
+                             Weight = 'Normal')
 
 ggplot(periodic_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(periodic_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -353,8 +359,10 @@ In both the AUC and Max Cplasma distirbutions, with increasing age there is incr
 periodic_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(periodic_pcp_ob_20$numeric, periodic_pcp_ob_40$numeric, periodic_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(periodic_pcp_ob_20$numeric, periodic_pcp_ob_40$numeric, periodic_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_pcp_ob$BW, mean(twenties_pcp_ob$BW), fourties_pcp_ob$BW, mean(fourties_pcp_ob$BW), seventies_pcp_ob$BW, mean(seventies_pcp_ob$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Periodic')
+                             Scenario = 'Periodic',
+                             Weight = 'Obese')
 
 ggplot(periodic_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(periodic_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -396,8 +404,10 @@ We dig into the numerics with the following.
 constant_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(constant_pcp_20$numeric, constant_pcp_40$numeric, constant_pcp_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(constant_pcp_20$numeric, constant_pcp_40$numeric, constant_pcp_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_pcp$BW, mean(twenties_pcp$BW), fourties_pcp$BW, mean(fourties_pcp$BW), seventies_pcp$BW, mean(seventies_pcp$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Constant')
+                             Scenario = 'Constant',
+                             Weight = 'Normal')
 
 ggplot(constant_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(constant_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -417,8 +427,10 @@ From the Cplasma curve plots above, observe that the plots from the acute scenar
 constant_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(constant_pcp_ob_20$numeric, constant_pcp_ob_40$numeric, constant_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(constant_pcp_ob_20$numeric, constant_pcp_ob_40$numeric, constant_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_pcp_ob$BW, mean(twenties_pcp_ob$BW), fourties_pcp_ob$BW, mean(fourties_pcp_ob$BW), seventies_pcp_ob$BW, mean(seventies_pcp_ob$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Constant')
+                             Scenario = 'Constant',
+                             Weight = 'Obese')
 
 ggplot(constant_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(constant_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -430,6 +442,13 @@ ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(50
 ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
 ```
 
+We examine these values identified by body weight and scenario.
+
+```{r}
+ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),], acute_httk_pcp[-c(501, 1002, 1503),], periodic_httk_pcp[-c(501, 1002, 1503),], constant_httk_pcp[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = interaction(Weight, Scenario), fill = interaction(Weight, Scenario))) + ggridges::geom_density_ridges(alpha = 0.1) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Weight:Scenario', color = 'Weight:Scenario')
+
+ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),], acute_httk_pcp[-c(501, 1002, 1503),], periodic_httk_pcp[-c(501, 1002, 1503),], constant_httk_pcp[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = interaction(Weight, Scenario), fill = interaction(Weight, Scenario))) + ggridges::geom_density_ridges(alpha = 0.1) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Weight:Scenario', color = 'Weight:Scenario')
+```
 
 #### BPA simulations
 
@@ -470,8 +489,10 @@ We dig into the numerics with the following.
 acute_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(acute_bpa_20$numeric, acute_bpa_40$numeric, acute_bpa_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(acute_bpa_20$numeric, acute_bpa_40$numeric, acute_bpa_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_bpa$BW, mean(twenties_bpa$BW), fourties_bpa$BW, mean(fourties_bpa$BW), seventies_bpa$BW, mean(seventies_bpa$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Acute')
+                             Scenario = 'Acute',
+                             Weight = 'Normal')
 
 ggplot(acute_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(acute_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -483,8 +504,10 @@ From the density plots, we observe that the older cohorts do have more mass at h
 acute_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(acute_bpa_ob_20$numeric, acute_bpa_ob_40$numeric, acute_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(acute_bpa_ob_20$numeric, acute_bpa_ob_40$numeric, acute_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_bpa_ob$BW, mean(twenties_bpa_ob$BW), fourties_bpa_ob$BW, mean(fourties_bpa_ob$BW), seventies_bpa_ob$BW, mean(seventies_bpa_ob$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Acute')
+                             Scenario = 'Acute',
+                             Weight = 'Obese')
 
 ggplot(acute_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(acute_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -526,8 +549,10 @@ We dig into the numerics with the following.
 periodic_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(periodic_bpa_20$numeric, periodic_bpa_40$numeric, periodic_bpa_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(periodic_bpa_20$numeric, periodic_bpa_40$numeric, periodic_bpa_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_bpa$BW, mean(twenties_bpa$BW), fourties_bpa$BW, mean(fourties_bpa$BW), seventies_bpa$BW, mean(seventies_bpa$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Periodic')
+                             Scenario = 'Periodic',
+                             Weight = 'Normal')
 
 ggplot(periodic_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(periodic_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -539,8 +564,10 @@ In both the AUC and Max Cplasma distirbutions, with increasing age there is incr
 periodic_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(periodic_bpa_ob_20$numeric, periodic_bpa_ob_40$numeric, periodic_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(periodic_bpa_ob_20$numeric, periodic_bpa_ob_40$numeric, periodic_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_bpa_ob$BW, mean(twenties_bpa_ob$BW), fourties_bpa_ob$BW, mean(fourties_bpa_ob$BW), seventies_bpa_ob$BW, mean(seventies_bpa_ob$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Periodic')
+                             Scenario = 'Periodic',
+                             Weight = 'Obese')
 
 ggplot(periodic_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(periodic_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -582,8 +609,10 @@ We dig into the numerics with the following.
 constant_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(constant_bpa_20$numeric, constant_bpa_40$numeric, constant_bpa_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(constant_bpa_20$numeric, constant_bpa_40$numeric, constant_bpa_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_bpa$BW, mean(twenties_bpa$BW), fourties_bpa$BW, mean(fourties_bpa$BW), seventies_bpa$BW, mean(seventies_bpa$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Constant')
+                             Scenario = 'Constant',
+                             Weight = 'Normal')
 
 ggplot(constant_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(constant_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -607,8 +636,10 @@ What this suggests is that the populations have a relatively higher ability to c
 constant_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(constant_bpa_ob_20$numeric, constant_bpa_ob_40$numeric, constant_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(constant_bpa_ob_20$numeric, constant_bpa_ob_40$numeric, constant_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
+                             BW = c(twenties_bpa_ob$BW, mean(twenties_bpa_ob$BW), fourties_bpa_ob$BW, mean(fourties_bpa_ob$BW), seventies_bpa_ob$BW, mean(seventies_bpa_ob$BW)),
                              Age = rep(c(20, 40, 70), each = 501),
-                             Scenario = 'Constant')
+                             Scenario = 'Constant',
+                             Weight = 'Obese')
 
 ggplot(constant_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
 ggplot(constant_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -621,9 +652,309 @@ ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(50
 ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
 ```
 
+We examine these values identified by body weight and scenario.
+
+```{r}
+ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),], acute_httk_bpa[-c(501, 1002, 1503),], periodic_httk_bpa[-c(501, 1002, 1503),], constant_httk_bpa[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = interaction(Weight, Scenario), fill = interaction(Weight, Scenario))) + ggridges::geom_density_ridges(alpha = 0.1) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Weight:Scenario', color = 'Weight:Scenario')
+
+ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),], acute_httk_bpa[-c(501, 1002, 1503),], periodic_httk_bpa[-c(501, 1002, 1503),], constant_httk_bpa[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = interaction(Weight, Scenario), fill = interaction(Weight, Scenario))) + ggridges::geom_density_ridges(alpha = 0.1) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Weight:Scenario', color = 'Weight:Scenario')
+```
+
+
 ### Dose-response
 
 After completing the exposure simulations and determining the internal blood plasma concentrations, one can ask what sort of response these exposure may cause by using bioactivity assay data. Specifically, pairing dose-response data with the internal concentration data allows one to study the potential response from different types of exposure. We use the function `get_active_assays()` to retrieve and format relevant assay data for use in setting hill parameters for dose-response modelling.
+
+We use assay data for PCP that is already loaded from the GeoTox package.
+
+```{r}
+acute_20_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_20_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+acute_20_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_20_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+acute_40_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_40_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+acute_40_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_40_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+acute_70_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_70_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+acute_70_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_70_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+
+
+periodic_20_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = periodic_exposure_matrix, model_parameters = pcp_20_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+periodic_20_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = periodic_exposure_matrix, model_parameters = pcp_20_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+periodic_40_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = periodic_exposure_matrix, model_parameters = pcp_40_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+periodic_40_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = periodic_exposure_matrix, model_parameters = pcp_40_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+periodic_70_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = periodic_exposure_matrix, model_parameters = pcp_70_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+periodic_70_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = periodic_exposure_matrix, model_parameters = pcp_70_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+
+constant_20_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_exposure_matrix, model_parameters = pcp_20_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+constant_20_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_exposure_matrix, model_parameters = pcp_20_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+constant_40_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_exposure_matrix, model_parameters = pcp_40_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+constant_40_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_exposure_matrix, model_parameters = pcp_40_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+constant_70_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_exposure_matrix, model_parameters = pcp_70_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+constant_70_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = constant_exposure_matrix, model_parameters = pcp_70_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
+
+```
+
+Next we graph different measures of sensitivity.
+
+First for 20s.
+
+```{r}
+# Plots for PCP exposure sensitivity for 20s
+ggplot(tidyr::pivot_longer(data.table(acute_20_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(acute_20_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() +
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(periodic_20_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(periodic_20_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(constant_20_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() +
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(constant_20_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+
+Next for 40s.
+
+```{r}
+# Plots for PCP exposure sensitivity for 40s
+ggplot(tidyr::pivot_longer(data.table(acute_40_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(acute_40_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() +
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(periodic_40_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(periodic_40_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(constant_40_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() +
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(constant_40_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+
+Finally for 70s.
+
+```{r}
+# Plots for PCP exposure sensitivity for 70s
+ggplot(tidyr::pivot_longer(data.table(acute_70_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(acute_70_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() +
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(periodic_70_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(periodic_70_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(constant_70_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() +
+  xlab('log10 absolute difference in response')
+ggplot(tidyr::pivot_longer(data.table(constant_70_ob_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+We also examine the signed differences, which record the differences in magnitude of changes in the dose-response behavior during increases and decreases of the response.
+
+```{r}
+# Signed sensitivity for PCP scenarios
+sensitivity_acute_20_signed_pcp <- tidyr::pivot_longer(data.table(acute_20_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_acute_20_ob_signed_pcp <- tidyr::pivot_longer(data.table(acute_20_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_acute_40_signed_pcp <- tidyr::pivot_longer(data.table(acute_40_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_acute_40_ob_signed_pcp <- tidyr::pivot_longer(data.table(acute_40_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_acute_70_signed_pcp <- tidyr::pivot_longer(data.table(acute_70_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_acute_70_ob_signed_pcp <- tidyr::pivot_longer(data.table(acute_70_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+sensitivity_periodic_20_signed_pcp <- tidyr::pivot_longer(data.table(periodic_20_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_periodic_20_ob_signed_pcp <- tidyr::pivot_longer(data.table(periodic_20_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_periodic_40_signed_pcp <- tidyr::pivot_longer(data.table(periodic_40_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_periodic_40_ob_signed_pcp <- tidyr::pivot_longer(data.table(periodic_40_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_periodic_70_signed_pcp <- tidyr::pivot_longer(data.table(periodic_70_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_periodic_70_ob_signed_pcp <- tidyr::pivot_longer(data.table(periodic_70_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+sensitivity_constant_20_signed_pcp <- tidyr::pivot_longer(data.table(constant_20_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_constant_20_ob_signed_pcp <- tidyr::pivot_longer(data.table(constant_20_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_constant_40_signed_pcp <- tidyr::pivot_longer(data.table(constant_40_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_constant_40_ob_signed_pcp <- tidyr::pivot_longer(data.table(constant_40_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_constant_70_signed_pcp <- tidyr::pivot_longer(data.table(constant_70_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+sensitivity_constant_70_ob_signed_pcp <- tidyr::pivot_longer(data.table(constant_70_ob_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+```
+
+```{r}
+# Plots of signed sensitivity for PCP scenarios 20s
+ggplot(sensitivity_acute_20_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_acute_20_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_periodic_20_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_periodic_20_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_constant_20_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_constant_20_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
+
+
+
+```{r}
+# Plots of signed sensitivity for PCP scenarios 40s
+ggplot(sensitivity_acute_40_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_acute_40_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_periodic_40_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_periodic_40_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_constant_40_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_constant_40_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
+
+
+```{r}
+# Plots of signed sensitivity for PCP scenarios 70s
+ggplot(sensitivity_acute_70_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_acute_70_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_periodic_70_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_periodic_70_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_constant_70_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(sensitivity_constant_70_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
+
+We also examine how the time-resolution affects the simulations. We work with the acute exposure scenario in the 20 - 29 cohort for both weight designations at 0.1, 1, and 2 day time resolutions.
+
+```{r}
+acute_20_pcp_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pcp_20_param, plot = TRUE, C_ext = acute_dose_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.1, 1, 2), sample = 'left')
+acute_20_ob_pcp_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pcp_20_ob_param, plot = TRUE, C_ext = acute_dose_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.1, 1, 2), sample = 'left')
+```
+
+We examine the plots.
+
+```{r}
+acute_20_pcp_standard_variability$`0.1`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_20_pcp_standard_variability$`1`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_20_pcp_standard_variability$`2`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+
+acute_20_ob_pcp_standard_variability$`0.1`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_20_ob_pcp_standard_variability$`1`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_20_ob_pcp_standard_variability$`2`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+
+```
+
+
+We examine the AUC sensitivity.
+
+```{r}
+acute_20_pcp_variability_stats <- data.table('individual' = 1:501,
+                                      '0.1' = sapply(acute_20_pcp_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}),
+                                      '1' = sapply(acute_20_pcp_standard_variability$`1`$numeric, function(t) {max(t$AUC)}),
+                                      '2' = sapply(acute_20_pcp_standard_variability$`2`$numeric, function(t) {max(t$AUC)}),
+                                      'unadjusted' = sapply(acute_pcp_20$numeric, function(t) {max(t$AUC)}))
+acute_20_pcp_variability_long <- tidyr::pivot_longer(acute_20_pcp_variability_stats[-501, ], cols = -1)
+
+summary(acute_20_pcp_variability_stats[, 2])
+summary(acute_20_pcp_variability_stats[, 3])
+summary(acute_20_pcp_variability_stats[, 4])
+summary(acute_20_pcp_variability_stats[, 5])
+
+ggplot(acute_20_pcp_variability_long, aes(x = value, y = name, color = name, fill = name)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC value') + labs(fill = 'Time resolution in days', color = 'Time resolution in days')
+
+```
+
+To delve deeper into these distributions of AUC values, we use the Kolmogorov-Smirnov test to determine which of these pairs of distributions may be significantly different.
+
+Acute scenario, normal weight class KS tests.
+
+```{r}
+ks.test(x = acute_20_pcp_variability_stats$`0.1`, y = acute_20_pcp_variability_stats$unadjusted)
+ks.test(x = acute_20_pcp_variability_stats$`1`, y = acute_20_pcp_variability_stats$unadjusted)
+ks.test(x = acute_20_pcp_variability_stats$`2`, y = acute_20_pcp_variability_stats$unadjusted)
+```
+
+
+```{r}
+acute_20_ob_pcp_variability_stats <- data.table('individual' = 1:501,
+                                      '0.1' = sapply(acute_20_ob_pcp_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}),
+                                      '1' = sapply(acute_20_ob_pcp_standard_variability$`1`$numeric, function(t) {max(t$AUC)}),
+                                      '2' = sapply(acute_20_ob_pcp_standard_variability$`2`$numeric, function(t) {max(t$AUC)}),
+                                      'unadjusted' = sapply(acute_pcp_ob_20$numeric, function(t) {max(t$AUC)}))
+acute_20_ob_pcp_variability_long <- tidyr::pivot_longer(acute_20_ob_pcp_variability_stats[-501, ], cols = -1)
+
+summary(acute_20_ob_pcp_variability_stats[, 2])
+summary(acute_20_ob_pcp_variability_stats[, 3])
+summary(acute_20_ob_pcp_variability_stats[, 4])
+summary(acute_20_ob_pcp_variability_stats[, 5])
+
+ggplot(acute_20_ob_pcp_variability_long, aes(x = value, y = name, color = name, fill = name)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC value') + labs(fill = 'Time resolution in days', color = 'Time resolution in days')
+
+```
+
+Acute scenario, obese weight category KS tests.
+
+```{r}
+ks.test(x = acute_20_ob_pcp_variability_stats$`0.1`, y = acute_20_ob_pcp_variability_stats$unadjusted)
+ks.test(x = acute_20_ob_pcp_variability_stats$`1`, y = acute_20_ob_pcp_variability_stats$unadjusted)
+ks.test(x = acute_20_ob_pcp_variability_stats$`2`, y = acute_20_ob_pcp_variability_stats$unadjusted)
+```
+
+
 
 ```{r}
 devtools::session_info()
