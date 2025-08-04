@@ -47,15 +47,15 @@ For our experiments, the exposure is given in mg of chemical, and each exposure 
 
 ### Simulated populations
 
-We will simulated several populations, leaning heavily on the functionality provided by the `httk` R package. We will simulate 500 individuals from the age ranges of 20-29, 30-39, 40-49, 50-59, 60-69, 70-79. These individuals will have `httk` parameters prepared for the following chemicals: Pentacholorphenol (87-86-5) and Bisphenol A (80-05-7) referred to from now on as PCP and BPA, respectively.
+We will simulated several populations, leaning heavily on the functionality provided by the `httk` R package. We will simulate 500 individuals from the age ranges of 20-29, 30-39, 40-49, 50-59, 60-69, 70-79. These individuals will have `httk` parameters prepared for the following chemicals: Pentacholorphenol (87-86-5) and Bisphenol A (80-05-7) referred to from now on as PCP and BPA, respectively. We simulate this for `Normal` and `Obese` populations.
 
 ```{r}
 twenties_pcp <- simulate_population_variability_parameters(chem.cas = '87-86-5',
-                                           agelim_years = c(20, 29),
-                                           weight_category = 'Normal',
-                                           samples = 500,
-                                           set_seed = TRUE,
-                                           seed = 2345)
+                                                           agelim_years = c(20, 29),
+                                                           weight_category = 'Normal',
+                                                           samples = 500,
+                                                           set_seed = TRUE,
+                                                           seed = 2345)
 #thirties_pcp <- simulate_population_variability_parameters(chem.cas = '87-86-5',
 #                                           agelim_years = c(30, 39),
 #                                           weight_category = 'Normal',
@@ -63,11 +63,11 @@ twenties_pcp <- simulate_population_variability_parameters(chem.cas = '87-86-5',
 #                                           set_seed = TRUE,
 #                                           seed = 2345)
 fourties_pcp <- simulate_population_variability_parameters(chem.cas = '87-86-5',
-                                           agelim_years = c(40, 49),
-                                           weight_category = 'Normal',
-                                           samples = 500,
-                                           set_seed = TRUE,
-                                           seed = 2345)
+                                                           agelim_years = c(40, 49),
+                                                           weight_category = 'Normal',
+                                                           samples = 500,
+                                                           set_seed = TRUE,
+                                                           seed = 2345)
 #fifties_pcp <- simulate_population_variability_parameters(chem.cas = '87-86-5',
 #                                           agelim_years = c(50, 59),
 #                                           weight_category = 'Normal',
@@ -81,18 +81,18 @@ fourties_pcp <- simulate_population_variability_parameters(chem.cas = '87-86-5',
 #                                           set_seed = TRUE,
 #                                           seed = 2345)
 seventies_pcp <- simulate_population_variability_parameters(chem.cas = '87-86-5',
-                                           agelim_years = c(70, 79),
-                                           weight_category = 'Normal',
-                                           samples = 500,
-                                           set_seed = TRUE,
-                                           seed = 2345)
+                                                            agelim_years = c(70, 79),
+                                                            weight_category = 'Normal',
+                                                            samples = 500,
+                                                            set_seed = TRUE,
+                                                            seed = 2345)
 
 twenties_bpa <- simulate_population_variability_parameters(chem.cas = '80-05-7',
-                                           agelim_years = c(20, 29),
-                                           weight_category = 'Normal',
-                                           samples = 500,
-                                           set_seed = TRUE,
-                                           seed = 2345)
+                                                           agelim_years = c(20, 29),
+                                                           weight_category = 'Normal',
+                                                           samples = 500,
+                                                           set_seed = TRUE,
+                                                           seed = 2345)
 #thirties_bpa <- simulate_population_variability_parameters(chem.cas = '80-05-7',
 #                                           agelim_years = c(30, 39),
 #                                           weight_category = 'Normal',
@@ -100,11 +100,11 @@ twenties_bpa <- simulate_population_variability_parameters(chem.cas = '80-05-7',
 #                                           set_seed = TRUE,
 #                                           seed = 2345)
 fourties_bpa <- simulate_population_variability_parameters(chem.cas = '80-05-7',
-                                           agelim_years = c(40, 49),
-                                           weight_category = 'Normal',
-                                           samples = 500,
-                                           set_seed = TRUE,
-                                           seed = 2345)
+                                                           agelim_years = c(40, 49),
+                                                           weight_category = 'Normal',
+                                                           samples = 500,
+                                                           set_seed = TRUE,
+                                                           seed = 2345)
 #fifties_bpa <- simulate_population_variability_parameters(chem.cas = '80-05-7',
 #                                           agelim_years = c(50, 59),
 #                                           weight_category = 'Normal',
@@ -118,11 +118,86 @@ fourties_bpa <- simulate_population_variability_parameters(chem.cas = '80-05-7',
 #                                           set_seed = TRUE,
 #                                           seed = 2345)
 seventies_bpa <- simulate_population_variability_parameters(chem.cas = '80-05-7',
-                                           agelim_years = c(70, 79),
-                                           weight_category = 'Normal',
-                                           samples = 500,
-                                           set_seed = TRUE,
-                                           seed = 2345)
+                                                            agelim_years = c(70, 79),
+                                                            weight_category = 'Normal',
+                                                            samples = 500,
+                                                            set_seed = TRUE,
+                                                            seed = 2345)
+twenties_pcp_ob <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+                                                              agelim_years = c(20, 29),
+                                                              weight_category = 'Obese',
+                                                              samples = 500,
+                                                              set_seed = TRUE,
+                                                              seed = 2345)
+#thirties_pcp_ob <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+#                                           agelim_years = c(30, 39),
+#                                           weight_category = 'Normal',
+#                                           samples = 500,
+#                                           set_seed = TRUE,
+#                                           seed = 2345)
+fourties_pcp_ob <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+                                                              agelim_years = c(40, 49),
+                                                              weight_category = 'Obese',
+                                                              samples = 500,
+                                                              set_seed = TRUE,
+                                                              seed = 2345)
+#fifties_pcp_ob <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+#                                           agelim_years = c(50, 59),
+#                                           weight_category = 'Normal',
+#                                           samples = 500,
+#                                           set_seed = TRUE,
+#                                           seed = 2345)
+#sixties_pcp_ob <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+#                                           agelim_years = c(60, 69),
+#                                           weight_category = 'Normal',
+#                                           samples = 500,
+#                                           set_seed = TRUE,
+#                                           seed = 2345)
+seventies_pcp_ob <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+                                                               agelim_years = c(70, 79),
+                                                               weight_category = 'Obese',
+                                                               samples = 500,
+                                                               set_seed = TRUE,
+                                                               seed = 2345)
+
+twenties_bpa_ob <- simulate_population_variability_parameters(chem.cas = '80-05-7',
+                                                              agelim_years = c(20, 29),
+                                                              weight_category = 'Obese',
+                                                              samples = 500,
+                                                              set_seed = TRUE,
+                                                              seed = 2345)
+#thirties_bpa_ob <- simulate_population_variability_parameters(chem.cas = '80-05-7',
+#                                           agelim_years = c(30, 39),
+#                                           weight_category = 'Normal',
+#                                           samples = 500,
+#                                           set_seed = TRUE,
+#                                           seed = 2345)
+fourties_bpa_ob <- simulate_population_variability_parameters(chem.cas = '80-05-7',
+                                                              agelim_years = c(40, 49),
+                                                              weight_category = 'Obese',
+                                                              samples = 500,
+                                                              set_seed = TRUE,
+                                                              seed = 2345)
+#fifties_bpa_ob <- simulate_population_variability_parameters(chem.cas = '80-05-7',
+#                                           agelim_years = c(50, 59),
+#                                           weight_category = 'Normal',
+#                                           samples = 500,
+#                                           set_seed = TRUE,
+#                                           seed = 2345)
+#sixties_bpa_ob <- simulate_population_variability_parameters(chem.cas = '80-05-7',
+#                                           agelim_years = c(60, 69),
+#                                           weight_category = 'Normal',
+#                                           samples = 500,
+#                                           set_seed = TRUE,
+#                                           seed = 2345)
+seventies_bpa_ob <- simulate_population_variability_parameters(chem.cas = '80-05-7',
+                                                               agelim_years = c(70, 79),
+                                                               weight_category = 'Obese',
+                                                               samples = 500,
+                                                               set_seed = TRUE,
+                                                               seed = 2345)
+
+
 ```
 We examine a few these different individuals for different age cohorts and chemicals.
 
@@ -131,6 +206,10 @@ head(twenties_bpa)
 head(seventies_bpa)
 head(twenties_pcp)
 head(seventies_pcp)
+head(twenties_bpa_ob)
+head(seventies_bpa_ob)
+head(twenties_pcp_ob)
+head(seventies_pcp_ob)
 ```
 
 To use these parameters in modelling, we need to add some model-specific parameters. We will use the 'pbtk' model from `httk` and to add the associated missing parameters, we use the function `parametrize_httk()`.
@@ -149,6 +228,20 @@ bpa_40_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = fou
 #bpa_50_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = fifties_bpa)
 #bpa_60_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = sixties_bpa)
 bpa_70_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = seventies_bpa)
+
+pcp_20_ob_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = twenties_pcp_ob)
+#pcp_30_ob_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = thirties_pcp_ob)
+pcp_40_ob_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = fourties_pcp_ob)
+#pcp_50_ob_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = fifties_pcp_ob)
+#pcp_60_ob_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = sixties_pcp_ob)
+pcp_70_ob_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = seventies_pcp_ob)
+
+bpa_20_ob_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = twenties_bpa_ob)
+#bpa_30_ob_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = thirties_bpa_ob)
+bpa_40_ob_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = fourties_bpa_ob)
+#bpa_50_ob_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = fifties_bpa_ob)
+#bpa_60_ob_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = sixties_bpa_ob)
+bpa_70_ob_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = seventies_bpa_ob)
 ```
 
 ### Exposure simulations
@@ -166,6 +259,12 @@ acute_pcp_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_param
 
 acute_pcp_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
 
+acute_pcp_ob_20 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_ob_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
+
+acute_pcp_ob_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_ob_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
+
+acute_pcp_ob_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70_ob_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
+
 ```
 
 We plot the blood plasma concentration curves.
@@ -174,6 +273,9 @@ We plot the blood plasma concentration curves.
 acute_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_pcp_ob_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_pcp_ob_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_pcp_ob_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
 Observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 1.5 - 2.0, while  for those in the 40-49 cohort the values are from 2.0 - 3.0, and for 70-79 the values are 2.0 - 6.0.
 
@@ -192,6 +294,17 @@ ggplot(acute_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age),
 
 From the density plots, we observe that the older cohorts do have more mass at higher max Cplasma values than the youngest cohort, and similarly the AUC scores have more mass at higher values with increasing age.
 
+```{r}
+acute_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
+                             Cplasma_max = sapply(c(acute_pcp_ob_20$numeric, acute_pcp_ob_40$numeric, acute_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
+                             AUC = sapply(c(acute_pcp_ob_20$numeric, acute_pcp_ob_40$numeric, acute_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
+                             Age = rep(c(20, 40, 70), each = 501),
+                             Scenario = 'Acute')
+
+ggplot(acute_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+ggplot(acute_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+```
+
 We repeat this analysis for the periodic exposure scenario.
 
 ```{r}
@@ -201,6 +314,11 @@ periodic_pcp_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_pa
 
 periodic_pcp_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
 
+periodic_pcp_ob_20 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_ob_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
+
+periodic_pcp_ob_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_ob_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
+
+periodic_pcp_ob_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70_ob_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
 ```
 
 We plot the blood plasma concentration curves.
@@ -209,6 +327,9 @@ We plot the blood plasma concentration curves.
 periodic_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+periodic_pcp_ob_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+periodic_pcp_ob_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+periodic_pcp_ob_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
 Again observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 and 40-49 cohorts have a peak blood plasma concentration between 0.35 - 0.45, while for those in the 70-79 cohort have the values exceeding 0.4.
 
@@ -228,6 +349,18 @@ ggplot(periodic_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Ag
 In both the AUC and Max Cplasma distirbutions, with increasing age there is increasing mass at higher values.
 
 
+```{r}
+periodic_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
+                             Cplasma_max = sapply(c(periodic_pcp_ob_20$numeric, periodic_pcp_ob_40$numeric, periodic_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
+                             AUC = sapply(c(periodic_pcp_ob_20$numeric, periodic_pcp_ob_40$numeric, periodic_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
+                             Age = rep(c(20, 40, 70), each = 501),
+                             Scenario = 'Periodic')
+
+ggplot(periodic_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+ggplot(periodic_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+```
+
+
 Finally, we complete the analysis of the constant exposure scenario.
 
 ```{r}
@@ -237,6 +370,12 @@ constant_pcp_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_pa
 
 constant_pcp_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
 
+constant_pcp_ob_20 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_ob_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
+
+constant_pcp_ob_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_ob_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
+
+constant_pcp_ob_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70_ob_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
+
 ```
 
 We plot the blood plasma concentration curves.
@@ -245,6 +384,9 @@ We plot the blood plasma concentration curves.
 constant_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+constant_pcp_ob_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+constant_pcp_ob_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+constant_pcp_ob_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
 As with the previous exposure scenarios, there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.3 - 0.4, while  for those in the 40-49 cohort the values are from 0.35 - 0.45, and for 70-79 the values are 0.4-0.5.
 
@@ -271,6 +413,23 @@ ggplot(rbind(acute_httk_pcp[-c(501, 1002, 1503),], periodic_httk_pcp[-c(501, 100
 
 From the Cplasma curve plots above, observe that the plots from the acute scenario in general approach a concentration of 0 $\mu$Mol while in the periodic and constant scenarios the curves approach a steady state value that is non-trivial. If the dosing scenarios all were to stop at 30 days but the `httk` 'pbtk' simulations continued for a sufficiently long period, the steady state values of the periodic and constant exposures would approach 0 as there would be no more loading of chemical. In this case, the chemical would have been metabolized and excreted or stored in organs so that the AUC values would all converge. However, in the current simulations, only the acute scenario has had sufficient time for this to be observed, so the AUC is higher than in the periodic and constant exposure scenarios.
 
+```{r}
+constant_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
+                             Cplasma_max = sapply(c(constant_pcp_ob_20$numeric, constant_pcp_ob_40$numeric, constant_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
+                             AUC = sapply(c(constant_pcp_ob_20$numeric, constant_pcp_ob_40$numeric, constant_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
+                             Age = rep(c(20, 40, 70), each = 501),
+                             Scenario = 'Constant')
+
+ggplot(constant_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+ggplot(constant_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+```
+
+```{r}
+ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
+
+ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
+```
+
 
 #### BPA simulations
 
@@ -283,6 +442,12 @@ acute_bpa_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_param
 
 acute_bpa_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
 
+acute_bpa_ob_20 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_20_ob_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
+
+acute_bpa_ob_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_ob_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
+
+acute_bpa_ob_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70_ob_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
+
 ```
 
 We plot the blood plasma concentration curves.
@@ -291,6 +456,9 @@ We plot the blood plasma concentration curves.
 acute_bpa_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_bpa_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_bpa_ob_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_bpa_ob_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+acute_bpa_ob_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
 
 
@@ -311,6 +479,18 @@ ggplot(acute_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age),
 
 From the density plots, we observe that the older cohorts do have more mass at higher max Cplasma values than the youngest cohort, and similarly the AUC scores have more mass at higher values with increasing age.
 
+```{r}
+acute_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
+                             Cplasma_max = sapply(c(acute_bpa_ob_20$numeric, acute_bpa_ob_40$numeric, acute_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
+                             AUC = sapply(c(acute_bpa_ob_20$numeric, acute_bpa_ob_40$numeric, acute_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
+                             Age = rep(c(20, 40, 70), each = 501),
+                             Scenario = 'Acute')
+
+ggplot(acute_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+ggplot(acute_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+```
+
+
 We repeat this analysis for the periodic exposure scenario.
 
 ```{r}
@@ -320,6 +500,12 @@ periodic_bpa_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_pa
 
 periodic_bpa_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
 
+periodic_bpa_ob_20 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_20_ob_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
+
+periodic_bpa_ob_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_ob_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
+
+periodic_bpa_ob_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70_ob_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
+
 ```
 
 We plot the blood plasma concentration curves.
@@ -328,6 +514,9 @@ We plot the blood plasma concentration curves.
 periodic_bpa_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_bpa_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+periodic_bpa_ob_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+periodic_bpa_ob_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+periodic_bpa_ob_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
 Again observe that there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 and 40-49 cohorts have values between 0.08 and 0.12, while for those in the 70-79 cohort have the values between 0.825 and 0.15.
 
@@ -346,6 +535,17 @@ ggplot(periodic_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Ag
 
 In both the AUC and Max Cplasma distirbutions, with increasing age there is increasing mass at higher values.
 
+```{r}
+periodic_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
+                             Cplasma_max = sapply(c(periodic_bpa_ob_20$numeric, periodic_bpa_ob_40$numeric, periodic_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
+                             AUC = sapply(c(periodic_bpa_ob_20$numeric, periodic_bpa_ob_40$numeric, periodic_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
+                             Age = rep(c(20, 40, 70), each = 501),
+                             Scenario = 'Periodic')
+
+ggplot(periodic_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+ggplot(periodic_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+```
+
 
 Finally, we complete the analysis of the constant exposure scenario.
 
@@ -356,6 +556,12 @@ constant_bpa_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_pa
 
 constant_bpa_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
 
+constant_bpa_ob_20 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_20_ob_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
+
+constant_bpa_ob_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_ob_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
+
+constant_bpa_ob_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70_ob_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
+
 ```
 
 We plot the blood plasma concentration curves.
@@ -364,6 +570,9 @@ We plot the blood plasma concentration curves.
 constant_bpa_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_bpa_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+constant_bpa_ob_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+constant_bpa_ob_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
+constant_bpa_ob_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 ```
 As with the previous exposure scenarios, there appears to be some variability in responses to the exposure scenario for the different populations. In general, the most sensitive individuals among the 20-29 cohort have a peak blood plasma concentration between 0.075 - 0.0825, and similarly so for those in the 40-49 cohort, and for 70-79 the values are 0.075 - 0.1.
 
@@ -393,6 +602,24 @@ ggplot(rbind(acute_httk_bpa[-c(501, 1002, 1503),], periodic_httk_bpa[-c(501, 100
 From the Cplasma curve plots above, observe that the plots from the acute scenario in general approach a concentration of 0 $\mu$Mol while in the periodic and constant scenarios the curves approach a steady state value that is non-trivial, much like in the scenarios for PCP. The time to steady-state for PCP in the periodic exposure scenarios appears to be around 15-20 days while for the constant exposure this is appears to be at or above 30 days, since the curves are still noticeably growing rather than leveling off at their steady-state asymptotic limits. However for BPA the periodic exposure, the Cplasma appears to hit a steady-state around 5-6 days for the twenties and forties cohorts and 8-10 days for the seventies cohort. Similarly, the BPA constant exposure Cplasma curves appear to hit steady-state between 10-15 days for all cohorts.
 
 What this suggests is that the populations have a relatively higher ability to clear BPA than PCP and arrive at steady-state earlier. A consequence of this is that the constant exposure scenario has more mass in the max Cplasma density at slightly lower levels than in the periodic scenario. The relatively quick clearance rates level off the curves faster, and within each period of the periodic exposure, there is more chemical exposure front-loaded in the constant scenario than the periodic scenario. This leads the to more of the BPA being metabolized, distributed, and excreted earlier in the period through the constant scenario, so the max Cplasma level is in general a little lower. As with the PCP, the Max Cplasma is higher in general for the acute scenario than for the periodic and constant scenarios. However, the AUC distributions are much closer, again a consequence of the faster arrival to steady state as well as the lower steady state values. If the simulations were to continue long enough for the periodic and constant exposure scenarios to approach steady state of 0 with no additional chemical loading, the time to achieve this would be shorter than in the PCP case because the clearance rate for BPA is higher and consequently the Cplasma concentrations are lower. There is less to clear and what is cleared will clear faster.
+
+```{r}
+constant_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
+                             Cplasma_max = sapply(c(constant_bpa_ob_20$numeric, constant_bpa_ob_40$numeric, constant_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
+                             AUC = sapply(c(constant_bpa_ob_20$numeric, constant_bpa_ob_40$numeric, constant_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
+                             Age = rep(c(20, 40, 70), each = 501),
+                             Scenario = 'Constant')
+
+ggplot(constant_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+ggplot(constant_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+```
+
+
+```{r}
+ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
+
+ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
+```
 
 ### Dose-response
 
