@@ -954,7 +954,99 @@ ks.test(x = acute_20_ob_pcp_variability_stats$`1`, y = acute_20_ob_pcp_variabili
 ks.test(x = acute_20_ob_pcp_variability_stats$`2`, y = acute_20_ob_pcp_variability_stats$unadjusted)
 ```
 
+And now we tie in both the dose-response and time resolution analysis for PCP. We compute this for the acute scenario, 20 - 29 cohort, normal and obese weight categories.
 
+We compute the effects of varying time resolution on the same chemical exposure scenario for a single chemical.
+
+```{r}
+time_resolution_acute_20_pcp_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5'), IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
+time_resolution_acute_20_ob_pcp_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5'), IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
+
+```
+
+
+```{r}
+# For the 0.1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_response$`0.1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_response$`1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 2 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_response$`2`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+
+```{r}
+# For the 0.1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_response$`0.1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 1 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_response$`1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+
+# For the 2 day resolution
+ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_response$`2`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+         dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
+  ggridges::geom_density_ridges() + 
+  xlab('log10 absolute difference in response')
+```
+
+Compute the signed sensitivity.
+
+```{r}
+# Process the data
+resolution_sensitivity_acute_20_pcp_signed_0.1 <- tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_response$`0.1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_acute_20_pcp_signed_1 <- tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_response$`1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_acute_20_pcp_signed_2 <- tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_response$`2`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+# Plot the data
+ggplot(resolution_sensitivity_acute_20_pcp_signed_0.1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_acute_20_pcp_signed_1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_acute_20_pcp_signed_2, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
+
+
+```{r}
+# Process the data
+resolution_sensitivity_acute_20_ob_pcp_signed_0.1 <- tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_response$`0.1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_acute_20_ob_pcp_signed_1 <- tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_response$`1`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+resolution_sensitivity_acute_20_ob_pcp_signed_2 <- tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_response$`2`[[1]])[, lapply(.SD, diff), .SDcols = 2:5][, sample := 1:.N], cols = !sample) |> 
+  dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
+  dplyr::filter(!is.na(increment) & increment >= 1E-15)
+
+# Plot the data
+ggplot(resolution_sensitivity_acute_20_ob_pcp_signed_0.1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_acute_20_ob_pcp_signed_1, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+ggplot(resolution_sensitivity_acute_20_ob_pcp_signed_2, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
+```
 
 ```{r}
 devtools::session_info()
