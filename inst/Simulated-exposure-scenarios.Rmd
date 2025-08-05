@@ -881,8 +881,8 @@ ggplot(sensitivity_constant_70_ob_signed_pcp, aes(x = log10(increment), y = name
 We also examine how the time-resolution affects the simulations. We work with the acute exposure scenario in the 20 - 29 cohort for both weight designations at 0.1, 1, and 2 day time resolutions.
 
 ```{r}
-acute_20_pcp_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pcp_20_param, plot = TRUE, C_ext = acute_dose_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.1, 1, 2), sample = 'left')
-acute_20_ob_pcp_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pcp_20_ob_param, plot = TRUE, C_ext = acute_dose_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.1, 1, 2), sample = 'left')
+acute_20_pcp_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pcp_20_param, plot = TRUE, C_ext = acute_exposure_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.1, 1, 2), sample = 'left')
+acute_20_ob_pcp_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pcp_20_ob_param, plot = TRUE, C_ext = acute_exposure_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.1, 1, 2), sample = 'left')
 ```
 
 We examine the plots.
@@ -959,8 +959,8 @@ And now we tie in both the dose-response and time resolution analysis for PCP. W
 We compute the effects of varying time resolution on the same chemical exposure scenario for a single chemical.
 
 ```{r}
-time_resolution_acute_20_pcp_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = acute_dose_matrix, model_parameters = pbtk_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5'), IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
-time_resolution_acute_20_ob_pcp_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = periodic_dose_matrix, model_parameters = pbtk_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5'), IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
+time_resolution_acute_20_pcp_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = acute_exposure_matrix, model_parameters = pcp_20_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5'), IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
+time_resolution_acute_20_ob_pcp_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = periodic_exposure_matrix, model_parameters = pcp_20_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5'), IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
 
 ```
 
