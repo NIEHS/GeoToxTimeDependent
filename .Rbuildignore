@@ -22,3 +22,4 @@ inst/Time-dependent-integration\.html$
 inst/Time-dependent-integration\.Rmd$
 inst/Simulated-exposure-scenarios\.html$
 inst/Simulated-exposure-scenarios\.Rmd$
+inst/Figure_generation.R

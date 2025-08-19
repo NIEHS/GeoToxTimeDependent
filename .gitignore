@@ -31,6 +31,9 @@ renv/
 renv.lock
 .Rprofile
 
+# figure generation
+inst/Figure_generation.R
+
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
