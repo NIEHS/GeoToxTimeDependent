@@ -15,7 +15,8 @@ solve_httk_model(
   timestep = NULL,
   IR = NULL,
   standardize = TRUE,
-  plot_average = FALSE
+  plot_average = FALSE,
+  keep_all_columns = FALSE
 )
 }
 \arguments{
@@ -55,6 +56,11 @@ bodyweight.}
 
 \item{plot_average}{Whether to compute and plot the 'average' individual from
 the set of \code{parameters} representing the entire simulated population.}
+
+\item{keep_all_columns}{A Boolean that determines whether to return all
+columns of the \code{httk} simulations. Default is \code{FALSE} and returns just the
+'time', 'Cplasma' and 'AUC' columns of \code{httk} data in addition to the
+'iteration' and 'person' columns generated for recordkeeping.}
 }
 \value{
 A list of httk model output values for each iteration and an
