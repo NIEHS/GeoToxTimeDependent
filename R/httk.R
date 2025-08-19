@@ -336,7 +336,7 @@ parametrize_httk <- function(chem.cas,
   model_params <- as.data.frame(lapply(httk_model(chem.cas = chem.cas), rep, n_entries))
 
   col_intersect <- intersect(names(mcs), names(model_params))
-  print(col_intersect)
+  #print(col_intersect)
 
   #print(mcs[1,])
 
@@ -383,6 +383,10 @@ parametrize_httk <- function(chem.cas,
 #'   bodyweight.
 #' @param plot_average Whether to compute and plot the 'average' individual from
 #'   the set of `parameters` representing the entire simulated population.
+#' @param keep_all_columns A Boolean that determines whether to return all
+#'   columns of the `httk` simulations. Default is `FALSE` and returns just the
+#'   'time', 'Cplasma' and 'AUC' columns of `httk` data in addition to the
+#'   'iteration' and 'person' columns generated for recordkeeping.
 #'
 #' @returns A list of httk model output values for each iteration and an
 #'   optional `ggplot2` plot of the Cplasma vs time for each individual
@@ -401,7 +405,8 @@ solve_httk_model <- function(chem.cas,
                              timestep = NULL,
                              IR = NULL,
                              standardize = TRUE,
-                             plot_average = FALSE){
+                             plot_average = FALSE,
+                             keep_all_columns = FALSE){
 
   n_entries <- dim(parameters)[[1]]
 
@@ -468,6 +473,9 @@ solve_httk_model <- function(chem.cas,
                                        dosing.matrix = internal_dose,
                                        suppress.messages = TRUE,
                                        days = days))
+      if (!keep_all_columns){
+        temp <- temp |> dplyr::select(c('time', 'Cplasma', 'AUC'))
+      }
       temp$iteration <- i
       temp$iteration <- as.factor(temp$iteration)
       temp$person <- 'general person'
@@ -477,6 +485,9 @@ solve_httk_model <- function(chem.cas,
   } else {
   for (i in 1:n_entries){
     temp <- as.data.frame(httk_model(parameters = parameters[i,], suppress.messages = TRUE))
+    if (!keep_all_columns){
+      temp <- temp |> dplyr::select(c('time', 'Cplasma', 'AUC'))
+    }
     temp$iteration <- i
     temp$iteration <- as.factor(temp$iteration)
     temp$person <- 'general person'
@@ -676,9 +687,9 @@ compute_c_ext_sensitivity <- function(chem.cas = NULL,
     httk::solve_pbtk
   )
 
-  print(chem.cas)
-  print(colnames(C_ext))
-  print(hill_params$chem)
+  #print(chem.cas)
+  #print(colnames(C_ext))
+  #print(hill_params$chem)
 
 
   col_index <- which(colnames(C_ext) == 'time')
@@ -692,7 +703,7 @@ compute_c_ext_sensitivity <- function(chem.cas = NULL,
   average_person_param <- get_population_statistics(params = model_parameters)
 
   chem_names <- intersect(intersect(chem.cas, colnames(C_ext)), hill_params$chem)
-  print(chem_names)
+  #print(chem_names)
 
   C_invitro <- c()
 
@@ -701,7 +712,7 @@ compute_c_ext_sensitivity <- function(chem.cas = NULL,
     # chemical concentration given by the associated CASRN
     for (i in 1:length(chem_names)){
       current_chemical_parameters <- model_parameters |> dplyr::filter(chem.cas == chem_names[[i]])
-      print(dim(current_chemical_parameters))
+      #print(dim(current_chemical_parameters))
 
       chem_col_index <- which(colnames(C_ext) == chem_names[[i]])
       C_ext_temp <- C_ext[, c(col_index, chem_col_index)]
@@ -876,11 +887,11 @@ compute_time_resolution_sensitivity <- function(chem.cas = NULL,
       dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
     }
 
-    print(colnames(dose_matrix))
-    print(colnames(C_ext))
+    #print(colnames(dose_matrix))
+    #print(colnames(C_ext))
 
     colnames(dose_matrix) <- c('time', colnames(C_ext)[-col_t])
-    print(colnames(dose_matrix))
+    #print(colnames(dose_matrix))
 
 
 
@@ -983,11 +994,11 @@ time_resolution_variation <- function(chem.cas,
       dose_matrix <- cbind(matrix(temp_times, ncol = 1, dimnames = list(NULL, c('time'))), C_ext[sample_index, -col_t])
     }
 
-    print(colnames(dose_matrix))
-    print(colnames(C_ext))
+    #print(colnames(dose_matrix))
+    #print(colnames(C_ext))
 
     colnames(dose_matrix) <- c('time', colnames(C_ext)[-col_t])
-    print(colnames(dose_matrix))
+    #print(colnames(dose_matrix))
 
     temp_trial <- solve_httk_model(chem.cas = chem.cas,
                                    model = model,
