@@ -139,7 +139,8 @@ threshold_exceedance <- function(thresholds,
     response_sum[[i]] <- sum((response[which(threshold_level <= response)] - threshold_level)*time_diffs[which(threshold_level <= response)])
   }
 
-  exceedance_data <- data.frame('threshold' = names(thresholds),
+  exceedance_data <- data.frame('threshold_name' = names(thresholds),
+                                'threshold_value' = unlist(unname(thresholds)),
                                 'time_exceeded' = time_exceeded,
                                 'response_sum' = response_sum)
   return(exceedance_data)
