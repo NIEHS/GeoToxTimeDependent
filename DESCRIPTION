@@ -26,6 +26,7 @@ Imports:
     dplyr,
     ggplot2,
     ggridges,
+    httk,
     methods,
     purrr,
     rlang,
@@ -39,7 +40,6 @@ Imports:
     utils
 Suggests: 
     ggpubr,
-    httk,
     httr2,
     knitr,
     readr,
