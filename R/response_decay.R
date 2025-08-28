@@ -85,6 +85,97 @@ response_decay <- function(plasma_data = NULL,
                     'response' = response))
 }
 
+
+#' ODE version of Response Decay
+#'
+#' Models time-dependent assay response given plasma concentration following the
+#' ODE system \eqn{\frac{dR}{dt} = -KR + Kf(d(t))} where \eqn{R} is the
+#' response, \eqn{d} is the dose function, \eqn{f} is the dose-response
+#' function, and \eqn{K} is a decay rate coefficient. For constant dose regime
+#' \eqn{d}, the steady-state response is given by \eqn{R = f(d)}. The value of
+#' the decay rate constant \eqn{K} is determined by \eqn{K =
+#' -\frac{\log(\text{tol})}{t_{ss}}} where \eqn{\text{tol}} is the tolerance
+#' level and \eqn{t_{ss}} is the time it takes the response to converge to
+#' \eqn{R_{ss}} under constant dosing regime within a specified tolerance level.
+#'  See the description of `tol` below for more details.
+#'
+#' @param plasma_data A data.frame containing dose-response data. Must contain
+#'   columns `time` and `Cplasma`.
+#' @param max The max response level for assay.
+#' @param min The min response level for assay.
+#' @param AC50 AC50 level for assay.
+#' @param n The slope factor for the assay response.
+#' @param t_ss Time to steady-state of assay response within tolerance level
+#'   `tol`.
+#' @param tol A value strictly between 0 and 1, giving the level determining how
+#'   close the response level is to steady-state value. More specifically, let
+#'   \eqn{R_{ss}} is the steady-state response corresponding to a specific
+#'   constant dose level and \eqn{t_{ss}} the time it takes to achieve
+#'   \eqn{|\frac{R(t)}{R_{ss}}| < 1 - \text{tol}} for \eqn{t > t_{ss}}.
+#'
+#' @returns A `deSolve` object with columns 'time', 'response', and
+#'   'new_response'. The column 'new_response' is the incremental response value
+#'   from the dose at the time point while 'response' gives the overall
+#'   response.
+#' @export
+#'
+#' @examplesIf FALSE
+response_decay_ode <- function(plasma_data = NULL,
+                               max = NULL,
+                               min = NULL,
+                               AC50 = NULL,
+                               n = NULL,
+                               t_ss = NULL,
+                               tol = 1E-4){
+  if (!(all(c('time', 'Cplasma') %in% names(plasma_data)))){
+    stop('`plasma_data` must include columns for "time" and "Cplasma"!')
+  }
+
+  if(any(sapply(c(max, min, AC50, n, t_ss), is.null))){
+    stop('Missing input value for one of `max`, `min`, `AC50`, `n`, `t_ss`!')
+  }
+
+  t_idx <- which(names(plasma_data) == 'time')
+  p_idx <- which(names(plasma_data) == 'Cplasma')
+
+  times <- plasma_data[, t_idx]
+  plasma <- plasma_data[, p_idx]
+  response <- hill_val(conc = plasma, max = max, AC50 = AC50, n = n)
+  # Normalize response to between 0 and 1
+  normalized_response <- (response - min)/(max - min)
+
+  dose_table <- data.frame(time = times,
+                           plasma = plasma,
+                           response = response,
+                           normalized_response = normalized_response)
+
+
+
+  input_ode_response <- stats::approxfun(dose_table[, -c(2,4)], rule = 2)
+
+
+  response_ode <- function(t, x, parms){
+    with(as.list(c(parms, x)),{
+      response <- input_ode_response(t)
+      dR <- -K*R + K*response
+      list(dR, new_reponse = response)
+    })
+  }
+
+  parms <- c(K = -log(tol)/t_ss)
+  xstart <- c(R = hill_val(conc = 1E-10, max = max, AC50 = AC50, n=n))
+
+  ode_response_solution <- deSolve::ode(y = xstart, times = times, func = response_ode, parms)
+
+  # Undo normalization
+  #ode_response_solution[, 2] <- (max-min)*ode_response_solution[, 2] + min
+
+  colnames(ode_response_solution) <- c('time', 'response', 'new_response')
+
+  return(ode_response_solution)
+
+}
+
 #' Determine the time and AUC of excess response
 #'
 #' Given a response curve and response threshold(s), it is possible to determine
