@@ -85,6 +85,67 @@ response_decay <- function(plasma_data = NULL,
                     'response' = response))
 }
 
+response_decay_exponential <- function(plasma_data = NULL,
+                                       max = NULL,
+                                       AC50 = NULL,
+                                       n = NULL,
+                                       K_decay = NULL,
+                                       k_off = NULL,
+                                       k_on = NULL){
+  if (!(all(c('time', 'Cplasma') %in% names(plasma_data)))){
+    stop('`plasma_data` must include columns for "time" and "Cplasma"!')
+  }
+
+  if(any(sapply(c(max, AC50, n), is.null))){
+    stop('Missing input value for one of `max`, `AC50`, `n`!')
+  }
+
+  dose_dependent <- FALSE
+
+  if (is.null(K_decay)){
+    if (is.null(k_off) | is.null(k_on)){
+    stop('Either `K_decay` or both `k_on` and `k_off` must be supplied!')
+    } else {
+      dose_dependent <- TRUE
+    }
+  } else if (!is.null(K_decay)){
+    warning('Defaulting to decay constant that is not dose-dependent!')
+  }
+
+  t_idx <- which(names(plasma_data) == 'time')
+  p_idx <- which(names(plasma_data) == 'Cplasma')
+
+  times <- plasma_data[, t_idx]
+  time_diffs <- diff(times)
+  plasma <- plasma_data[, p_idx]
+
+
+  response <- numeric(length(times))
+
+  response[[1]] <- 0
+
+  if (dose_dependent){
+    for (i in 1:length(time_diffs)){
+      current_response <- response[[i]]
+      response_addition <- hill_val(conc = plasma[[i]], max = max, AC50 = AC50, n = n)
+      decay_coefficient <- k_off + k_on*plasma[[i]]
+      current_decay <- exp(-decay_coefficient*time_diffs[[i]])
+      new_response <- response_addition + (current_response - response_addition)*current_decay
+      response[[i+1]] <- new_response
+    }
+  } else {
+    for (i in 1:length(time_diffs)){
+      current_response <- response[[i]]
+      response_addition <- hill_val(conc = plasma[[i]], max = max, AC50 = AC50, n = n)
+      current_decay <- exp(-K_decay*time_diffs[[i]])
+      new_response <- response_addition + (current_response - response_addition)*current_decay
+      response[[i+1]] <- new_response
+    }
+  }
+
+  return(data.frame('time' = times,
+                    'response' = response))
+}
 
 #' ODE version of Response Decay
 #'
