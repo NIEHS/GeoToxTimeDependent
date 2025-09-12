@@ -23,6 +23,7 @@ Imports:
     cli,
     ctxR,
     data.table,
+    deSolve,
     dplyr,
     ggplot2,
     ggridges,
