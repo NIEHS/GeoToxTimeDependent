@@ -1257,7 +1257,7 @@ We repeat for the very high exposure scenarios.
 First for the very high periodic exposure.
 
 ```{r}
-thresholds_periodic <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'high' = 3E1, 'very high' = 5E1)
+thresholds_periodic <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
 
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
@@ -1268,7 +1268,7 @@ threshold_exceedance(thresholds = thresholds_periodic, response_data = response_
 Thresholds for very high acute exposure.
 
 ```{r}
-thresholds_acute <- c('zero' = 0, 'low' = 1E1, 'medium' = 5E1, 'high' = 1E2)
+thresholds_acute <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
 
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
@@ -1279,7 +1279,7 @@ threshold_exceedance(thresholds = thresholds_acute, response_data = response_dec
 And thresholds for very high constant exposure.
 
 ```{r}
-thresholds_constant <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'high' = 5E1)
+thresholds_constant <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
 
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
@@ -1287,6 +1287,7 @@ threshold_exceedance(thresholds = thresholds_constant, response_data = response_
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))
 ```
 
+In the case of very high exposure scenarios, the decay rates are all relatively fast given the magnitude of the blood plasma concentrations and the association constant. Hence, there is little difference in the various combinations of decay constant values and times exceeding different thresholds. However, it is clear that the time exceeding thresholds and sum of response over those thresholds does differ by scenario. For instance, the overall response sum for lower thresholds (0, 1) is higher in the periodic and constant exposure scenarios than the acute exposure scenario and similarly for mid range thresholds (1E1). Also of note, the acute exposure has higher time exceeding higher thresholds (5E1) than the periodic and constant exposure scenarios.
 
 ```{r}
 devtools::session_info()
