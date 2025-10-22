@@ -17,11 +17,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r switches, include=FALSE}
-section_exp <- FALSE
-section_pop <- FALSE
-section_sim <- FALSE
-section_dr <- FALSE
-section_pre_eq_dr <- FALSE
+section_exp <- TRUE
+section_pop <- TRUE
+section_sim <- TRUE
+section_dr <- TRUE
+section_pre_eq_dr <- TRUE
 ```
 
 ```{r}
