@@ -2,11 +2,26 @@
 title: "Simulated-exposure-scenarios"
 author: "Paul Kruse"
 date: "2025-07-30"
-output: html_document
+output: 
+  html_document:
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    toc_float:
+      collapsed: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r switches, include=FALSE}
+section_exp <- FALSE
+section_pop <- FALSE
+section_sim <- FALSE
+section_dr <- FALSE
+section_pre_eq_dr <- FALSE
 ```
 
 ```{r}
@@ -14,24 +29,24 @@ library(httk)
 library(dplyr)
 library(tidyr)
 library(data.table)
-library(GeoTox)
+#library(GeoTox)
 library(gganimate)
 library(gifski)
 library(ggridges)
 devtools::load_all()
 ```
 
-## Time varying exposure scenarios across different populations
+# Time varying exposure scenarios across different populations
 
 We will examine three different exposure scenarios that result in the same overall exposure to a mixture of chemicals. We then simulate different populations to determine how they react to these different exposure scenarios. In addition, we also examine how varying the time-resolution of the exposures affect the "average" member of each population.
 
-### Exposure scenarios
+## Exposure scenarios
 
 We look at three different scenarios, representing an acute exposure, a periodic exposure, and a constant exposure. In each scenario, the total exposure to the chemical is the same, though the levels are varied to represent different magnitudes of exposure at a given time. In reality, the body will react in real-time to exposures, but these scenarios will have time points given by hourly data. 
 
 The acute exposure is given by $$f(t) = \bigg\{\begin{array}{ll} 0 & t \in [0,1) \\ 100\exp(-t) & t \in [1, 30]\end{array}$$, starting with zero exposure and then experiencing an sudden high exposure that rapidly decays. The periodic exposure is given by $$f(t) = \frac{100}{19.15}|\sin(t)|$$, which follows a sinusoidal pattern with period every $\pi$ days. Finally, the constant exposure is given by $$f(t) = \frac{10}{3}.$$
 
-```{r cars}
+```{r exposure, eval = section_exp}
 time <- seq(from = 0, to = 30, by = 1/24)
 dose_a <- c(rep(0, 24), 100*exp(-time[1:697]))
 dose_b <- 100/19.15*abs(sin(time))
@@ -46,11 +61,11 @@ ggplot(acute_exposure_matrix, aes(x = time, y = dose, color = 'Acute')) + geom_l
 
 For our experiments, the exposure is given in mg of chemical, and each exposure provides 100 mg of total exposure over thirty days. 
 
-### Simulated populations
+## Simulated populations
 
 We will simulated several populations, leaning heavily on the functionality provided by the `httk` R package. We will simulate 500 individuals from the age ranges of 20-29, 30-39, 40-49, 50-59, 60-69, 70-79. These individuals will have `httk` parameters prepared for the following chemicals: Pentacholorphenol (87-86-5) and Bisphenol A (80-05-7) referred to from now on as PCP and BPA, respectively. We simulate this for `Normal` and `Obese` populations.
 
-```{r}
+```{r, eval = section_pop}
 twenties_pcp <- simulate_population_variability_parameters(chem.cas = '87-86-5',
                                                            agelim_years = c(20, 29),
                                                            weight_category = 'Normal',
@@ -202,7 +217,7 @@ seventies_bpa_ob <- simulate_population_variability_parameters(chem.cas = '80-05
 ```
 We examine a few these different individuals for different age cohorts and chemicals.
 
-```{r}
+```{r, eval=section_pop}
 head(twenties_bpa)
 head(seventies_bpa)
 head(twenties_pcp)
@@ -215,7 +230,7 @@ head(seventies_pcp_ob)
 
 To use these parameters in modelling, we need to add some model-specific parameters. We will use the 'pbtk' model from `httk` and to add the associated missing parameters, we use the function `parametrize_httk()`.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_pop}
 pcp_20_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = twenties_pcp)
 #pcp_30_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = thirties_pcp)
 pcp_40_param <- parametrize_httk(chem.cas = '87-86-5', model = 'pbtk', mcs = fourties_pcp)
@@ -245,15 +260,15 @@ bpa_40_ob_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = 
 bpa_70_ob_param <- parametrize_httk(chem.cas = '80-05-7', model = 'pbtk', mcs = seventies_bpa_ob)
 ```
 
-### Exposure simulations
+## Exposure simulations
 
 We now simulate exposure through the three scenarios described above, collecting the relevant data from the httk simulations. 
 
-#### PCP simulations
+### PCP simulations
 
 We suppress the color scale in this case because with 500 individuals, the guide becomes too unruly.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_sim}
 acute_pcp_20 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
 
 acute_pcp_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
@@ -270,7 +285,7 @@ acute_pcp_ob_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70_ob
 
 We plot the blood plasma concentration curves.
 
-```{r}
+```{r, eval=section_sim}
 acute_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
@@ -283,7 +298,7 @@ Observe that there appears to be some variability in responses to the exposure s
 
 We dig into the numerics with the following.
 
-```{r}
+```{r, eval=section_sim}
 acute_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(acute_pcp_20$numeric, acute_pcp_40$numeric, acute_pcp_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(acute_pcp_20$numeric, acute_pcp_40$numeric, acute_pcp_70$numeric), function(t) {max(t$AUC)}),
@@ -298,7 +313,7 @@ ggplot(acute_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age),
 
 From the density plots, we observe that the older cohorts do have more mass at higher max Cplasma values than the youngest cohort, and similarly the AUC scores have more mass at higher values with increasing age. There is a heavy right tail in the youngest cohort for AUC, potentially more so than for the 40s cohort.
 
-```{r}
+```{r, eval=section_sim}
 acute_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(acute_pcp_ob_20$numeric, acute_pcp_ob_40$numeric, acute_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(acute_pcp_ob_20$numeric, acute_pcp_ob_40$numeric, acute_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
@@ -316,7 +331,7 @@ The trends among the obese weight category follow a similar pattern for max Cpla
 
 We repeat this analysis for the periodic exposure scenario.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_sim}
 periodic_pcp_20 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
 
 periodic_pcp_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
@@ -332,7 +347,7 @@ periodic_pcp_ob_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70
 
 We plot the blood plasma concentration curves.
 
-```{r}
+```{r, eval=section_sim}
 periodic_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
@@ -345,7 +360,7 @@ Again observe that there appears to be some variability in responses to the expo
 
 We dig into the numerics with the following.
 
-```{r}
+```{r, eval=section_sim}
 periodic_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(periodic_pcp_20$numeric, periodic_pcp_40$numeric, periodic_pcp_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(periodic_pcp_20$numeric, periodic_pcp_40$numeric, periodic_pcp_70$numeric), function(t) {max(t$AUC)}),
@@ -361,7 +376,7 @@ ggplot(periodic_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Ag
 In both the AUC and Max Cplasma distirbutions, with increasing age there is increasing mass at higher values.
 
 
-```{r}
+```{r, eval=section_sim}
 periodic_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(periodic_pcp_ob_20$numeric, periodic_pcp_ob_40$numeric, periodic_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(periodic_pcp_ob_20$numeric, periodic_pcp_ob_40$numeric, periodic_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
@@ -377,7 +392,7 @@ ggplot(periodic_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character
 
 Finally, we complete the analysis of the constant exposure scenario.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_sim}
 constant_pcp_20 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
 
 constant_pcp_40 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_40_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
@@ -394,7 +409,7 @@ constant_pcp_ob_70 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_70
 
 We plot the blood plasma concentration curves.
 
-```{r}
+```{r, eval=section_sim}
 constant_pcp_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_pcp_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_pcp_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
@@ -407,7 +422,7 @@ As with the previous exposure scenarios, there appears to be some variability in
 
 We dig into the numerics with the following.
 
-```{r}
+```{r, eval=section_sim}
 constant_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(constant_pcp_20$numeric, constant_pcp_40$numeric, constant_pcp_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(constant_pcp_20$numeric, constant_pcp_40$numeric, constant_pcp_70$numeric), function(t) {max(t$AUC)}),
@@ -422,7 +437,7 @@ ggplot(constant_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Ag
 
 As in the previous exposure scenarios, there is increasing mass at higher values of Max Cplasma and AUC with increasing age. Note the similarity in the max Cplasma and AUC density plots between the periodic and constant exposures, and the contrast with the acute exposure scenario. In the acute scenario, most of the exposure is front-loaded and happens within the first few days. This results in a higher max Cplasma value than in the periodic and acute scenarios. Interestingly, the AUC values seem to have more mass at higher values under the acute scenario than the other scenarios, which are nearly identical. We show this more clearly in the plot below. The periodic and constant density plots are very similar and overlap while the acute scenario is distinct for each age cohort.
 
-```{r}
+```{r, eval=section_sim}
 ggplot(rbind(acute_httk_pcp[-c(501, 1002, 1503),], periodic_httk_pcp[-c(501, 1002, 1503),], constant_httk_pcp[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
 
 ggplot(rbind(acute_httk_pcp[-c(501, 1002, 1503),], periodic_httk_pcp[-c(501, 1002, 1503),], constant_httk_pcp[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
@@ -430,7 +445,7 @@ ggplot(rbind(acute_httk_pcp[-c(501, 1002, 1503),], periodic_httk_pcp[-c(501, 100
 
 From the Cplasma curve plots above, observe that the plots from the acute scenario in general approach a concentration of 0 $\mu$Mol while in the periodic and constant scenarios the curves approach a steady state value that is non-trivial. If the dosing scenarios all were to stop at 30 days but the `httk` 'pbtk' simulations continued for a sufficiently long period, the steady state values of the periodic and constant exposures would approach 0 as there would be no more loading of chemical. In this case, the chemical would have been metabolized and excreted or stored in organs so that the AUC values would all converge. However, in the current simulations, only the acute scenario has had sufficient time for this to be observed, so the AUC is higher in the acute scenario than in the periodic and constant exposure scenarios.
 
-```{r}
+```{r, eval=section_sim}
 constant_ob_httk_pcp <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(constant_pcp_ob_20$numeric, constant_pcp_ob_40$numeric, constant_pcp_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(constant_pcp_ob_20$numeric, constant_pcp_ob_40$numeric, constant_pcp_ob_70$numeric), function(t) {max(t$AUC)}),
@@ -446,7 +461,7 @@ ggplot(constant_ob_httk_pcp[-c(501, 1002, 1503),], aes(x = AUC, y = as.character
 The same trends hold among the obese weight category that are observed in the normal weight category for 
 
 
-```{r}
+```{r, eval=section_sim}
 ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
 
 ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
@@ -454,7 +469,7 @@ ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(50
 
 We examine these values identified by body weight and scenario.
 
-```{r}
+```{r, eval=section_sim}
 ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),], acute_httk_pcp[-c(501, 1002, 1503),], periodic_httk_pcp[-c(501, 1002, 1503),], constant_httk_pcp[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = interaction(Weight, Scenario), fill = interaction(Weight, Scenario))) + ggridges::geom_density_ridges(alpha = 0.1) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Weight:Scenario', color = 'Weight:Scenario')
 
 ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(501, 1002, 1503),], constant_ob_httk_pcp[-c(501, 1002, 1503),], acute_httk_pcp[-c(501, 1002, 1503),], periodic_httk_pcp[-c(501, 1002, 1503),], constant_httk_pcp[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = interaction(Weight, Scenario), fill = interaction(Weight, Scenario))) + ggridges::geom_density_ridges(alpha = 0.1) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Weight:Scenario', color = 'Weight:Scenario')
@@ -462,11 +477,11 @@ ggplot(rbind(acute_ob_httk_pcp[-c(501, 1002, 1503),], periodic_ob_httk_pcp[-c(50
 
 From the analyses of each weight scenario, we have already observed that the periodic and constant scenarios overlap a lot. This is evident by the fact that for each age cohort, there appears to be little difference between these exposure scenarios. Note however that the Obese:Periodic and Obese:Constant distributions are markedly shifted to lower values in both Max Cplasma and AUC than the Normal:Periodic and Normal:Constant. Similarly, the Obese:Acute is concentrated around lower values than Normal:Acute. This is in part explained by the fact that with more mass but with the same exposure that the blood plasma concentrations will be lower in the Obese weight category compared to the normal weight category.
 
-#### BPA simulations
+### BPA simulations
 
 We suppress the color scale in this case because with 500 individuals, the guide becomes too unruly.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_sim}
 acute_bpa_20 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_20_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
 
 acute_bpa_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_param, plot = TRUE, data.matrix = acute_exposure_matrix, plot_average = TRUE)
@@ -483,7 +498,7 @@ acute_bpa_ob_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70_ob
 
 We plot the blood plasma concentration curves.
 
-```{r}
+```{r, eval=section_sim}
 acute_bpa_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_bpa_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
@@ -497,7 +512,7 @@ Observe that there appears to be some variability in responses to the exposure s
 
 We dig into the numerics with the following.
 
-```{r}
+```{r, eval=section_sim}
 acute_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(acute_bpa_20$numeric, acute_bpa_40$numeric, acute_bpa_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(acute_bpa_20$numeric, acute_bpa_40$numeric, acute_bpa_70$numeric), function(t) {max(t$AUC)}),
@@ -512,7 +527,7 @@ ggplot(acute_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Age),
 
 From the density plots, we observe that the older cohorts do have more mass at higher max Cplasma values than the youngest cohort, and similarly the AUC scores have more mass at higher values with increasing age.
 
-```{r}
+```{r, eval=section_sim}
 acute_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(acute_bpa_ob_20$numeric, acute_bpa_ob_40$numeric, acute_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(acute_bpa_ob_20$numeric, acute_bpa_ob_40$numeric, acute_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
@@ -529,7 +544,7 @@ The same patterns hold within the obese weight category as in the normal weight 
 
 We repeat this analysis for the periodic exposure scenario.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_sim}
 periodic_bpa_20 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_20_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
 
 periodic_bpa_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_param, plot = TRUE, data.matrix = periodic_exposure_matrix, plot_average = TRUE)
@@ -546,7 +561,7 @@ periodic_bpa_ob_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70
 
 We plot the blood plasma concentration curves.
 
-```{r}
+```{r, eval=section_sim}
 periodic_bpa_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_bpa_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 periodic_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
@@ -559,7 +574,7 @@ Again observe that there appears to be some variability in responses to the expo
 
 We dig into the numerics with the following.
 
-```{r}
+```{r, eval=section_sim}
 periodic_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(periodic_bpa_20$numeric, periodic_bpa_40$numeric, periodic_bpa_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(periodic_bpa_20$numeric, periodic_bpa_40$numeric, periodic_bpa_70$numeric), function(t) {max(t$AUC)}),
@@ -574,7 +589,7 @@ ggplot(periodic_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character(Ag
 
 In both the AUC and Max Cplasma distributions, with increasing age there is increasing mass at higher values.
 
-```{r}
+```{r, eval=section_sim}
 periodic_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(periodic_bpa_ob_20$numeric, periodic_bpa_ob_40$numeric, periodic_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(periodic_bpa_ob_20$numeric, periodic_bpa_ob_40$numeric, periodic_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
@@ -592,7 +607,7 @@ The max Cplasma and AUC distributions have mass concentrated around lower values
 
 Finally, we complete the analysis of the constant exposure scenario.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_sim}
 constant_bpa_20 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_20_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
 
 constant_bpa_40 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_40_param, plot = TRUE, data.matrix = constant_exposure_matrix, plot_average = TRUE)
@@ -609,7 +624,7 @@ constant_bpa_ob_70 <- solve_httk_model(chem.cas = '80-05-7', parameters = bpa_70
 
 We plot the blood plasma concentration curves.
 
-```{r}
+```{r, eval=section_sim}
 constant_bpa_20$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_bpa_40$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 constant_bpa_70$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
@@ -622,7 +637,7 @@ As with the previous exposure scenarios, there appears to be some variability in
 
 We dig into the numerics with the following.
 
-```{r}
+```{r, eval=section_sim}
 constant_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(constant_bpa_20$numeric, constant_bpa_40$numeric, constant_bpa_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(constant_bpa_20$numeric, constant_bpa_40$numeric, constant_bpa_70$numeric), function(t) {max(t$AUC)}),
@@ -639,7 +654,7 @@ As in the previous exposure scenarios, there is increasing max at higher values 
 
 As was the case with PCP, note the similarity in the max Cplasma and AUC density plots between the periodic and constant exposures, and the contrast with the acute exposure scenario. In the acute scenario, most of the exposure is front-loaded and happens within the first few days. This results in a higher max Cplasma value than in the periodic and acute scenarios. Interestingly, the AUC values seem to have more mass at higher values under the acute scenario than the other scenarios, which are nearly identical. We show this more clearly in the plot below. The periodic and constant density plots are very similar and overlap while the acute scenario is distinct for each age cohort. However, unlike with PCP, it is easier to discern differences in the distributions of the periodic and constant exposure scenarios.
 
-```{r}
+```{r, eval=section_sim}
 ggplot(rbind(acute_httk_bpa[-c(501, 1002, 1503),], periodic_httk_bpa[-c(501, 1002, 1503),], constant_httk_bpa[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
 
 ggplot(rbind(acute_httk_bpa[-c(501, 1002, 1503),], periodic_httk_bpa[-c(501, 1002, 1503),], constant_httk_bpa[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
@@ -649,7 +664,7 @@ From the Cplasma curve plots above, observe that the plots from the acute scenar
 
 What this suggests is that the populations have a relatively higher ability to clear BPA than PCP and arrive at steady-state earlier. A consequence of this is that the constant exposure scenario has more mass in the max Cplasma density at slightly lower levels than in the periodic scenario. The relatively quick clearance rates level off the curves faster, and within each period of the periodic exposure, there is more chemical exposure front-loaded in the constant scenario than the periodic scenario. This leads the to more of the BPA being metabolized, distributed, and excreted earlier in the period through the constant scenario, so the max Cplasma level is in general a little lower. As with the PCP, the Max Cplasma is higher in general for the acute scenario than for the periodic and constant scenarios. However, the AUC distributions are much closer, again a consequence of the faster arrival to steady state as well as the lower steady state values. If the simulations were to continue long enough for the periodic and constant exposure scenarios to approach steady state of 0 with no additional chemical loading, the time to achieve this would be shorter than in the PCP case because the clearance rate for BPA is higher and consequently the Cplasma concentrations are lower. There is less to clear and what is cleared will clear faster.
 
-```{r}
+```{r, eval=section_sim}
 constant_ob_httk_bpa <- data.table(individual = rep(1:501, 3),
                              Cplasma_max = sapply(c(constant_bpa_ob_20$numeric, constant_bpa_ob_40$numeric, constant_bpa_ob_70$numeric), function(t) {max(t$Cplasma)}),
                              AUC = sapply(c(constant_bpa_ob_20$numeric, constant_bpa_ob_40$numeric, constant_bpa_ob_70$numeric), function(t) {max(t$AUC)}),
@@ -664,7 +679,7 @@ ggplot(constant_ob_httk_bpa[-c(501, 1002, 1503),], aes(x = AUC, y = as.character
 
 The older cohorts have slightly heavier right tails than the youngest for the max Cplasma and AUC distributions.
 
-```{r}
+```{r, eval=section_sim}
 ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
 
 ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = Scenario, fill = Scenario)) + ggridges::geom_density_ridges(alpha = 0.3) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Scenario', color = 'Scenario')
@@ -674,7 +689,7 @@ Similar to the normal weight distributions, the constant and periodic exposures 
 
 We examine these values identified by body weight and scenario.
 
-```{r}
+```{r, eval=section_sim}
 ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),], acute_httk_bpa[-c(501, 1002, 1503),], periodic_httk_bpa[-c(501, 1002, 1503),], constant_httk_bpa[-c(501, 1002, 1503),]), aes(x = Cplasma_max, y = as.character(Age), color = interaction(Weight, Scenario), fill = interaction(Weight, Scenario))) + ggridges::geom_density_ridges(alpha = 0.1) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Weight:Scenario', color = 'Weight:Scenario')
 
 ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(501, 1002, 1503),], constant_ob_httk_bpa[-c(501, 1002, 1503),], acute_httk_bpa[-c(501, 1002, 1503),], periodic_httk_bpa[-c(501, 1002, 1503),], constant_httk_bpa[-c(501, 1002, 1503),]), aes(x = AUC, y = as.character(Age), color = interaction(Weight, Scenario), fill = interaction(Weight, Scenario))) + ggridges::geom_density_ridges(alpha = 0.1) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Weight:Scenario', color = 'Weight:Scenario')
@@ -682,13 +697,13 @@ ggplot(rbind(acute_ob_httk_bpa[-c(501, 1002, 1503),], periodic_ob_httk_bpa[-c(50
 
 Notice again that the Periodic/Constant overlap is present for both weight groups and that these distributions for both max Cplasma and AUC than the acute distributions. Also notice that the obese weight group have distributions centered at lower values than the normal weight group distributions.
 
-### Dose-response
+## Dose-response
 
 After completing the exposure simulations and determining the internal blood plasma concentrations, one can ask what sort of response these exposure may cause by using bioactivity assay data. Specifically, pairing dose-response data with the internal concentration data allows one to study the potential response from different types of exposure. We use the function `get_active_assays()` to retrieve and format relevant assay data for use in setting hill parameters for dose-response modelling.
 
 We use assay data for PCP that is already loaded from the GeoTox package.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_dr}
 acute_20_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_20_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
 acute_20_ob_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_20_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
 acute_40_pcp_sensitivity <- compute_c_ext_sensitivity(chem.cas = c('87-86-5'), C_ext = acute_exposure_matrix, model_parameters = pcp_40_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5') , IR = 1)
@@ -717,7 +732,7 @@ Next we graph different measures of sensitivity.
 
 First for 20s.
 
-```{r}
+```{r, eval=section_dr}
 # Plots for PCP exposure sensitivity for 20s
 ggplot(tidyr::pivot_longer(data.table(acute_20_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:6][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
@@ -747,7 +762,7 @@ ggplot(tidyr::pivot_longer(data.table(constant_20_ob_pcp_sensitivity[[1]])[, lap
 
 Next for 40s.
 
-```{r}
+```{r, eval=section_dr}
 # Plots for PCP exposure sensitivity for 40s
 ggplot(tidyr::pivot_longer(data.table(acute_40_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:6][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
@@ -777,7 +792,7 @@ ggplot(tidyr::pivot_longer(data.table(constant_40_ob_pcp_sensitivity[[1]])[, lap
 
 Finally for 70s.
 
-```{r}
+```{r, eval=section_dr}
 # Plots for PCP exposure sensitivity for 70s
 ggplot(tidyr::pivot_longer(data.table(acute_70_pcp_sensitivity[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:6][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
@@ -807,7 +822,7 @@ ggplot(tidyr::pivot_longer(data.table(constant_70_ob_pcp_sensitivity[[1]])[, lap
 
 We also examine the signed differences, which record the differences in magnitude of changes in the dose-response behavior during increases and decreases of the response.
 
-```{r}
+```{r, eval=section_dr}
 # Signed sensitivity for PCP scenarios
 sensitivity_acute_20_signed_pcp <- tidyr::pivot_longer(data.table(acute_20_pcp_sensitivity[[1]])[, lapply(.SD, diff), .SDcols = 2:6][, sample := 1:.N], cols = !sample) |> 
   dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
@@ -867,7 +882,7 @@ sensitivity_constant_70_ob_signed_pcp <- tidyr::pivot_longer(data.table(constant
   dplyr::filter(!is.na(increment) & increment >= 1E-15)
 ```
 
-```{r}
+```{r, eval=section_dr}
 # Plots of signed sensitivity for PCP scenarios 20s
 ggplot(sensitivity_acute_20_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
 ggplot(sensitivity_acute_20_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
@@ -879,7 +894,7 @@ ggplot(sensitivity_constant_20_ob_signed_pcp, aes(x = log10(increment), y = name
 
 
 
-```{r}
+```{r, eval=section_dr}
 # Plots of signed sensitivity for PCP scenarios 40s
 ggplot(sensitivity_acute_40_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
 ggplot(sensitivity_acute_40_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
@@ -890,7 +905,7 @@ ggplot(sensitivity_constant_40_ob_signed_pcp, aes(x = log10(increment), y = name
 ```
 
 
-```{r}
+```{r, eval=section_dr}
 # Plots of signed sensitivity for PCP scenarios 70s
 ggplot(sensitivity_acute_70_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
 ggplot(sensitivity_acute_70_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
@@ -900,16 +915,18 @@ ggplot(sensitivity_constant_70_signed_pcp, aes(x = log10(increment), y = name, c
 ggplot(sensitivity_constant_70_ob_signed_pcp, aes(x = log10(increment), y = name, color = sign, fill = sign)) + ggridges::geom_density_ridges(alpha = .5)
 ```
 
+### Varying time resolution 
+
 We also examine how the time-resolution affects the simulations. We work with the acute exposure scenario in the 20 - 29 cohort for both weight designations at 0.1, 1, and 2 day time resolutions.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_dr}
 acute_20_pcp_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pcp_20_param, plot = TRUE, C_ext = acute_exposure_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.1, 1, 2), sample = 'left')
 acute_20_ob_pcp_standard_variability <- time_resolution_variation(chem.cas = '87-86-5', parameters = pcp_20_ob_param, plot = TRUE, C_ext = acute_exposure_matrix, standardize = TRUE, plot_average = TRUE, resolutions = c(.1, 1, 2), sample = 'left')
 ```
 
 We examine the plots.
 
-```{r}
+```{r, eval=section_dr}
 acute_20_pcp_standard_variability$`0.1`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_20_pcp_standard_variability$`1`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
 acute_20_pcp_standard_variability$`2`$plasma_plot + ggplot2::scale_color_discrete(guide = 'none')
@@ -923,7 +940,7 @@ acute_20_ob_pcp_standard_variability$`2`$plasma_plot + ggplot2::scale_color_disc
 
 We examine the AUC sensitivity.
 
-```{r}
+```{r, eval=section_dr}
 acute_20_pcp_variability_stats <- data.table('individual' = 1:501,
                                       '0.1' = sapply(acute_20_pcp_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}),
                                       '1' = sapply(acute_20_pcp_standard_variability$`1`$numeric, function(t) {max(t$AUC)}),
@@ -944,14 +961,14 @@ To delve deeper into these distributions of AUC values, we use the Kolmogorov-Sm
 
 Acute scenario, normal weight class KS tests.
 
-```{r}
+```{r, eval=section_dr}
 ks.test(x = acute_20_pcp_variability_stats$`0.1`, y = acute_20_pcp_variability_stats$unadjusted)
 ks.test(x = acute_20_pcp_variability_stats$`1`, y = acute_20_pcp_variability_stats$unadjusted)
 ks.test(x = acute_20_pcp_variability_stats$`2`, y = acute_20_pcp_variability_stats$unadjusted)
 ```
 
 
-```{r}
+```{r, eval=section_dr}
 acute_20_ob_pcp_variability_stats <- data.table('individual' = 1:501,
                                       '0.1' = sapply(acute_20_ob_pcp_standard_variability$`0.1`$numeric, function(t) {max(t$AUC)}),
                                       '1' = sapply(acute_20_ob_pcp_standard_variability$`1`$numeric, function(t) {max(t$AUC)}),
@@ -970,7 +987,7 @@ ggplot(acute_20_ob_pcp_variability_long, aes(x = value, y = name, color = name, 
 
 Acute scenario, obese weight category KS tests.
 
-```{r}
+```{r, eval=section_dr}
 ks.test(x = acute_20_ob_pcp_variability_stats$`0.1`, y = acute_20_ob_pcp_variability_stats$unadjusted)
 ks.test(x = acute_20_ob_pcp_variability_stats$`1`, y = acute_20_ob_pcp_variability_stats$unadjusted)
 ks.test(x = acute_20_ob_pcp_variability_stats$`2`, y = acute_20_ob_pcp_variability_stats$unadjusted)
@@ -980,14 +997,14 @@ And now we tie in both the dose-response and time resolution analysis for PCP. W
 
 We compute the effects of varying time resolution on the same chemical exposure scenario for a single chemical.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=section_dr}
 time_resolution_acute_20_pcp_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = acute_exposure_matrix, model_parameters = pcp_20_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5'), IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
 time_resolution_acute_20_ob_pcp_standard_response <- compute_time_resolution_sensitivity(chem.cas = '87-86-5', C_ext = periodic_exposure_matrix, model_parameters = pcp_20_ob_param, hill_params = geo_tox_data$dose_response |> fit_hill(assay = 'endp', chem = 'casn') |> dplyr::filter(!tp.sd.imputed, !logAC50.sd.imputed, chem == '87-86-5'), IR = 1, resolutions = c(0.1, 1, 2), sample = 'left')
 
 ```
 
 
-```{r}
+```{r, eval=section_dr}
 # For the 0.1 day resolution
 ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_response$`0.1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:6][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
@@ -1007,7 +1024,7 @@ ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_resp
   xlab('log10 absolute difference in response')
 ```
 
-```{r}
+```{r, eval=section_dr}
 # For the 0.1 day resolution
 ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_response$`0.1`[[1]])[, lapply(.SD, function(t) {abs(diff(t))}), .SDcols = 2:6][, sample := 1:.N], cols = !sample) |> 
          dplyr::filter(!is.na(value) & value >= 1E-15), aes(x = log10(value), y = name)) + 
@@ -1029,7 +1046,7 @@ ggplot(tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_r
 
 Compute the signed sensitivity.
 
-```{r}
+```{r, eval=section_dr}
 # Process the data
 resolution_sensitivity_acute_20_pcp_signed_0.1 <- tidyr::pivot_longer(data.table(time_resolution_acute_20_pcp_standard_response$`0.1`[[1]])[, lapply(.SD, diff), .SDcols = 2:6][, sample := 1:.N], cols = !sample) |> 
   dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
@@ -1050,7 +1067,7 @@ ggplot(resolution_sensitivity_acute_20_pcp_signed_2, aes(x = log10(increment), y
 ```
 
 
-```{r}
+```{r, eval=section_dr}
 # Process the data
 resolution_sensitivity_acute_20_ob_pcp_signed_0.1 <- tidyr::pivot_longer(data.table(time_resolution_acute_20_ob_pcp_standard_response$`0.1`[[1]])[, lapply(.SD, diff), .SDcols = 2:6][, sample := 1:.N], cols = !sample) |> 
   dplyr::mutate(increment = abs(value), sign = ifelse(value > 0, 'positive', 'negative')) |>
@@ -1080,11 +1097,24 @@ Finally, for a time-series of dose data, if the current response at $t$ is given
 
 When the decay term $e^{-K(D_t)\Delta t}$ is close to 1 (for slow decay), the current response $R_t$ decays but dominates the new response $f(D_t)$ provided the is not greater by orders of magnitude. This means that the overall response is lower in value but persists longer. When the decay term is closer to 0 (for fast decay), the new response $f(D_t)$ dominates the current response $f(D_t)$, again provided they are similar order of magnitude. The overall response is higher in this case, but depends more heavily on the steady-state response values of the dosing, and persists for shorter periods of time as the exposure dissipates.
 
+## Exposure scenarios
+
 We define a few higher dose exposures for exemplary purposes.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 time_dr <- seq(from = 0, to = 30, by = 1/24)
 time_2 <- seq(from = (30+1/24), to = 60, by = 1/24)
+dose_a_low <- c(rep(0, 24), 1E-1*exp(-time_dr[1:697]))
+dose_b_low <- 1E-1/19.15*abs(sin(time_dr))
+dose_c_low <- rep(1E-2/3, 721)
+
+acute_exposure_matrix_low <- matrix(c(time_dr, dose_a_low), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
+periodic_exposure_matrix_low <- matrix(c(time_dr, dose_b_low), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
+constant_exposure_matrix_low <- matrix(c(time_dr, dose_c_low), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
+
+
+
+
 dose_a_high <- c(rep(0, 24), 1E5*exp(-time_dr[1:697]))
 dose_b_high <- 1E5/19.15*abs(sin(time_dr))
 dose_c_high <- rep(1E4/3, 721)
@@ -1102,20 +1132,25 @@ periodic_exposure_matrix_very_high <- matrix(c(time_dr, dose_b_very_high), ncol 
 constant_exposure_matrix_very_high <- matrix(c(time_dr, dose_c_very_high), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
 ```
 
+## Simulations
+
 Next we look simulate the internal dynamics of a person in their 20s exposed to PCP.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 single_person_1 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(periodic_exposure_matrix_high, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
 single_person_2 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(acute_exposure_matrix_high, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
 single_person_3 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(constant_exposure_matrix_high, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
 single_person_4 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(periodic_exposure_matrix_very_high, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
 single_person_5 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(acute_exposure_matrix_very_high, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
 single_person_6 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(constant_exposure_matrix_very_high, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
+single_person_7 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(periodic_exposure_matrix_low, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
+single_person_8 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(acute_exposure_matrix_low, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
+single_person_9 <- solve_httk_model(chem.cas = '87-86-5', parameters = pcp_20_param[1,], plot = TRUE, data.matrix = rbind(constant_exposure_matrix_low, matrix(c(time_2, rep(0, length(time_2))), ncol = 2, dimnames = list(NULL, c('time', 'dose')))), plot_average = TRUE, keep_all_columns = TRUE)
 ```
 
 Examine ths summary statistics of the concentrations.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 summary(single_person_1$numeric$`Person 1`)
 summary(single_person_2$numeric$`Person 1`)
 summary(single_person_3$numeric$`Person 1`)
@@ -1123,11 +1158,11 @@ summary(single_person_4$numeric$`Person 1`)
 summary(single_person_5$numeric$`Person 1`)
 summary(single_person_6$numeric$`Person 1`)
 ```
-
+## Assay and Dose Response
 
 We collect assay data.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 # Relevant Hill parameters for different assays
 assay_hill_params <- GeoTox::geo_tox_data$dose_response |>
   GeoTox::fit_hill(assay = 'endp', chem = 'casn') |>
@@ -1143,7 +1178,7 @@ Note that $k_{-}$ and $k_{+}$ are at M level while the output of the blood plasm
 
 First we examine the high periodic exposure scenario.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 ggplot(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3), aes(time, response)) + geom_point() + geom_line()
@@ -1155,7 +1190,7 @@ ggplot(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 
 
 Next we examine the very high periodic exposure scenario.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 ggplot(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3), aes(time, response)) + geom_point() + geom_line()
@@ -1167,7 +1202,7 @@ ggplot(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 
 
 Then the high acute exposure scenario.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 ggplot(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3), aes(time, response)) + geom_point() + geom_line()
@@ -1179,7 +1214,7 @@ ggplot(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 
 
 And next the very high acute exposure scenario.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 ggplot(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3), aes(time, response)) + geom_point() + geom_line()
@@ -1192,7 +1227,7 @@ ggplot(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 
 
 And finally the high constant exposure.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 ggplot(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3), aes(time, response)) + geom_point() + geom_line()
@@ -1204,7 +1239,7 @@ ggplot(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 
 
 And the very high constant exposure.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 ggplot(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3), aes(time, response)) + geom_point() + geom_line()
@@ -1214,11 +1249,13 @@ ggplot(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 
 ggplot(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1), aes(time, response)) + geom_point() + geom_line()
 ```
 
+## Response levels
+
 We can also determine for how long the response is above a given set of thresholds. This is useful for quantifying the cumulative damage associated with exceedance of certain response levels.
 
 First for the high periodic exposure.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 thresholds_periodic <- c('zero' = 0, 'low' = 1E-6, 'medium' = 1E-5, 'high' = 3E-5, 'very high' = 5E-5)
 
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
@@ -1229,7 +1266,7 @@ threshold_exceedance(thresholds = thresholds_periodic, response_data = response_
 
 Thresholds for high acute exposure.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 thresholds_acute <- c('zero' = 0, 'low' = 1E-5, 'medium' = 1E-4, 'high' = 2E-4)
 
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
@@ -1240,7 +1277,7 @@ threshold_exceedance(thresholds = thresholds_acute, response_data = response_dec
 
 And thresholds for high constant exposure.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 thresholds_constant <- c('zero' = 0, 'low' = 1E-6, 'medium' = 1E-5, 'high' = 5E-5)
 
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
@@ -1256,7 +1293,7 @@ We repeat for the very high exposure scenarios.
 
 First for the very high periodic exposure.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 thresholds_periodic <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
 
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
@@ -1267,7 +1304,7 @@ threshold_exceedance(thresholds = thresholds_periodic, response_data = response_
 
 Thresholds for very high acute exposure.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 thresholds_acute <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
 
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
@@ -1278,7 +1315,7 @@ threshold_exceedance(thresholds = thresholds_acute, response_data = response_dec
 
 And thresholds for very high constant exposure.
 
-```{r}
+```{r, eval=section_pre_eq_dr}
 thresholds_constant <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
 
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
@@ -1289,6 +1326,110 @@ threshold_exceedance(thresholds = thresholds_constant, response_data = response_
 
 In the case of very high exposure scenarios, the decay rates are all relatively fast given the magnitude of the blood plasma concentrations and the association constant. Hence, there is little difference in the various combinations of decay constant values and times exceeding different thresholds. However, it is clear that the time exceeding thresholds and sum of response over those thresholds does differ by scenario. For instance, the overall response sum for lower thresholds (0, 1) is higher in the periodic and constant exposure scenarios than the acute exposure scenario and similarly for mid range thresholds (1E1). Also of note, the acute exposure has higher time exceeding higher thresholds (5E1) than the periodic and constant exposure scenarios.
 
+## Variations in dose response due to binding kinetics
+
+Since $K_D = \frac{k_{\text{off}}}{k_{\text{on}}}$, there are pairs of kinetic parameters of varying orders of magnitude that produce the same $K_D$ value. We will vary these parameters to produce several different values of $K_D$ and examine how these affect the time-dependent dose response for a fixed exposure scenario. 
+
+To simplify these calculations, we will assume an equilibrium dose response curve that has the following parameters: resp_max = 100, logAC50 = -3, and n = 1.
+
+We will examine $K_D$ values of 1E-15, 1E-14, 1E-13, 1E-12, 1E-11, 1E-10. For each of these, we set $K_{\text{on}}$ to be 1E2, 1E3, 1E4, 1E5, and 1E6, which determines the values of $K_{\text{off}}$.
+
+### K_off 1E-9, K_D 1E-11 to 1E-15
+
+Periodic low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E6), aes(time, response)) + geom_point() + geom_line()
+```
+
+Acute low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E6), aes(time, response)) + geom_point() + geom_line()
+```
+
+Constant low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E6), aes(time, response)) + geom_point() + geom_line()
+```
+
+
+### K_off 1E-10, K_D 1E-11 to 1E-15
+
+Periodic low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E1), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+```
+
+Acute low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E1), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+```
+
+Constant low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E1), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-10, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+```
+
+### K_off 1E-11, K_D 1E-12 to 1E-16
+
+Periodic low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E1), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+```
+
+Acute low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E1), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_8$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+```
+
+Constant low exposure.
+
+```{r, eval=section_pre_eq_dr}
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E1), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_9$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-11, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+```
 ```{r}
 devtools::session_info()
 ```
