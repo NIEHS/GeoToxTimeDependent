@@ -151,8 +151,12 @@ response_decay_exponential <- function(plasma_data = NULL,
 
 
   response <- numeric(length(times))
+  response_add <- numeric(length(times))
+  decay <- numeric(length(times))
 
   response[[1]] <- 0
+  response_add[[1]] <- 0
+  decay[[1]] <- 0
 
   if (dose_dependent){
     for (i in 1:length(time_diffs)){
@@ -166,6 +170,8 @@ response_decay_exponential <- function(plasma_data = NULL,
       current_decay <- exp(-decay_coefficient*time_interval)
       new_response <- response_addition + (current_response - response_addition)*current_decay
       response[[i+1]] <- new_response
+      response_add[[i+1]] <- response_addition
+      decay[[i+1]] <- current_decay
     }
   } else {
     for (i in 1:length(time_diffs)){
@@ -178,11 +184,15 @@ response_decay_exponential <- function(plasma_data = NULL,
       current_decay <- exp(-K_decay*time_interval)
       new_response <- response_addition + (current_response - response_addition)*current_decay
       response[[i+1]] <- new_response
+      response_add[[i+1]] <- response_addition
+      decay[[i+1]] <- current_decay
     }
   }
 
   return(data.frame('time' = times,
-                    'response' = response))
+                    'response' = response,
+                    'response_addition' = response_add,
+                    'decay' = decay))
 }
 
 #' ODE version of Response Decay
