@@ -1174,7 +1174,7 @@ tox21_dt40_657 <- assay_hill_params[4,]
 
 We plot various dose response scenarios using different values for $k_{-}$ and $k_{+}$ that control the dose-dependent decay.
 
-Note that $k_{-}$ and $k_{+}$ are at M level while the output of the blood plasma concentrations max out are around 1E2 uM for high scenarios and 1E5 for very high scenarios. Hence, setting $k_{-}$ = 1E-7 and varying $k_{+}$ from 1E-5 to 1E1 produces values of $K$ ranging from 1E-7 to 1E-3 for high scenarios and 1E-4 to 1E1 for very high scenarios. Moreover, since the timesteps are in terms of seconds while the time-series is given in units of days, the decay is scaled by 8.64E4, so the exponential term is on the order of exp(-1E-3) to exp(-1E1) (exp(-1) to exp(-1E4)) for high (very high), with the latter values representing very fast decay while the former represents slower decay. We expect the fast decay to resemble the response given by the traditional dose-response relationship, while the slow decay will have a lower peak value  but will accumulate response and persist longer at levels above baseline.
+Note that $k_{-}$ and $k_{+}$ are at M level while the output of the blood plasma concentrations max out are around 1E2 uM for high scenarios and 1E8 for very high scenarios. Hence, setting $k_{-}$ = 1E-7 and varying $k_{+}$ from 1E-5 to 1E1 produces values of $K$ ranging from 1E-7 to 1E-3 for high scenarios and 1E-3 to 1E3 for very high scenarios. Moreover, since the timesteps are in terms of seconds while the time-series is given in units of days, the decay is scaled by 8.64E4, so the exponential term is on the order of exp(-1E-3) to exp(-1E1) (exp(-1) to exp(-1E7)) for high (very high), with the latter values representing very fast decay while the former represents slower decay. We expect the fast decay to resemble the response given by the traditional dose-response relationship, while the slow decay will have a lower peak value  but will accumulate response and persist longer at levels above baseline.
 
 First we examine the high periodic exposure scenario.
 
@@ -1188,6 +1188,20 @@ ggplot(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 
 ggplot(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1), aes(time, response)) + geom_point() + geom_line()
 ```
 
+We also observe the decay statistics. 
+
+```{r}
+summary(data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))[decay > 0, 1-decay])
+```
+
+
+
 Next we examine the very high periodic exposure scenario.
 
 ```{r, eval=section_pre_eq_dr}
@@ -1199,6 +1213,18 @@ ggplot(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 
 ggplot(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1), aes(time, response)) + geom_point() + geom_line()
 ```
+Again, we observe the decay statistics. 
+
+```{r}
+summary(data.table(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))[decay > 0, 1-decay])
+```
+
 
 Then the high acute exposure scenario.
 
@@ -1210,6 +1236,19 @@ ggplot(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 
 ggplot(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1), aes(time, response)) + geom_point() + geom_line()
+```
+
+The corresponding decay statistics. 
+
+
+```{r}
+summary(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))[decay > 0, 1-decay])
 ```
 
 And next the very high acute exposure scenario.
@@ -1224,6 +1263,19 @@ ggplot(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 
 ggplot(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1), aes(time, response)) + geom_point() + geom_line()
 ```
 
+And again the decay statistics.
+
+
+```{r}
+summary(data.table(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))[decay > 0, 1-decay])
+```
+
 
 And finally the high constant exposure.
 
@@ -1236,6 +1288,19 @@ ggplot(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 
 ggplot(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1), aes(time, response)) + geom_point() + geom_line()
 ```
+The corresponding decay statistics.
+
+
+```{r}
+summary(data.table(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))[decay > 0, 1-decay])
+```
+
 
 And the very high constant exposure.
 
@@ -1248,6 +1313,102 @@ ggplot(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 
 ggplot(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4), aes(time, response)) + geom_point() + geom_line()
 ggplot(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1), aes(time, response)) + geom_point() + geom_line()
 ```
+And the decay statistics.
+
+
+```{r}
+summary(data.table(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[decay > 0, 1-decay])
+summary(data.table(response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))[decay > 0, 1-decay])
+```
+We make some observations. In the above sets of decay statistics, the term 1 - decay corresponds to $1 - e^{-K(D_t)\Delta t}$, which scales the response term of the dose at time $t$, that is $f(D_t)$. When this value is above 1E-2, the plots above show behavior that follows the steady-state dose response curve for each dose. When the decay term is below 1E-3 however, the behavior of this dose-response model more closely resembles a cumulative summation of the steady-state dose response values scaled by the decay term, that is $\sum f(D_t)(1-e^{-K(D_t)\Delta t})$. This difference in behavior appears to be driven by how much of the response from the previous timestep is degraded by the decay relative to how much the update is degraded. This gives a rough idea of what behavior one might expect given the summary statistics of the blood plasma concentrations, the association and dissociation constants, and the time steps. By completing a rough estimate based on orders of magnitude, one can surmise whether the pre-equilibrium behavior will resemble the steady-state model, the scaled summation, or somewhere between.
+
+Observe the decay constant and relation between the response level modeled by the pre-equilibrium method and the sum of responses scaled by the decay term.
+
+```{r}
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-6))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-6))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[, sum(response_addition*(1-decay))]
+```
+```{r}
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-6))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-6))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[, sum(response_addition*(1-decay))]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[, sum(response_addition*(1-decay))]
+
+
+
+```
+We see that for the decay values corresponding to less than 1E-3, the computed response and the scaled summation estimate are within an order of magnitude of each other, but above 1E-3, these values diverge considerably. On the flip side, when the decay values are above 1- 1E-3, the computed value and the scaled final dose-response value are incredibly close.
+
+```{r}
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E3))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E3))[.N, response_addition*(1-decay)]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E4))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E4))[.N, response_addition*(1-decay)]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E5))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E5))[.N, response_addition*(1-decay)]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E6))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E6))[.N, response_addition*(1-decay)]
+```
+To quanitfy the decay value distribution a bit more, see the output of the chunk below.
+
+```{r}
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-4))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E2))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E3))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E4))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E5))[decay>0,decay], c(0.01, .99))
+quantile(data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E6))[decay>0,decay], c(0.01, .99))
+
+```
+A simple calculation to capture the behavior of a given scenario is $e^{(-(\text{K}(\bar{D})\times 300))}$ where $\bar{D}$ is the mean blood plasma concentration. This decay represents the decay that takes place in 5 minutes. If this is above 1 - 1E-3, the behavior tends toward the scaled summation and if this is below 1E-3, it tends towards the tradition dose-response. Between these values, the behavior is in the transition between the two distinct behaviors.
 
 ## Response levels
 
