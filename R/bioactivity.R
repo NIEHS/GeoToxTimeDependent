@@ -49,12 +49,12 @@ get_active_assays <- function(assays = NULL,
   # print(dim(assay_data))
   # print(sum(assay_data$hitc >= hitc_))
 
-  assay_cols <- c('casn', 'dtxsid', 'aeid', 'logc', 'resp', 'spid')
+  assay_cols <- c('casn', 'dtxsid', 'aeid', 'conc', 'resp', 'spid')
   # Filter assay data to relevant assays by AEID values and hitc values
   assay_data <- assay_data |> dplyr::filter(.data$aeid %in% aeids$aeid) |>
     dplyr::filter(.data$hitc >= hitc_) |>
     dplyr::select(tidyselect::any_of(assay_cols)) |>
-    tidyr::unnest(cols = c('logc', 'resp'))
+    tidyr::unnest(cols = c('conc', 'resp'))
   # print('Filter by aeid')
   # print(dim(assay_data))
   # print(sum(assay_data$hitc >= hitc_))
@@ -76,8 +76,8 @@ get_active_assays <- function(assays = NULL,
 
 
   output_cols <- c('endp', 'casn', 'dtxsid', 'chnm', 'spid')
-  assay_data |> tidyr::unnest(cols = c('logc', 'resp')) |>
-    dplyr::mutate(c = 10^.data$logc) |> dplyr::select(-.data$aeid) |>
+  assay_data |> tidyr::unnest(cols = c('conc', 'resp')) |>
+    dplyr::mutate(c = conc) |> dplyr::mutate(logc = log10(conc)) |> dplyr::select(-.data$aeid) |>
     dplyr::relocate(output_cols)
 
   # # Process concentration and response data
