@@ -1115,17 +1115,17 @@ constant_exposure_matrix_low <- matrix(c(time_dr, dose_c_low), ncol = 2, dimname
 
 
 
-dose_a_high <- c(rep(0, 24), 1E5*exp(-time_dr[1:697]))
-dose_b_high <- 1E5/19.15*abs(sin(time_dr))
-dose_c_high <- rep(1E4/3, 721)
+dose_a_high <- c(rep(0, 24), 1E3*exp(-time_dr[1:697]))
+dose_b_high <- 1E3/19.15*abs(sin(time_dr))
+dose_c_high <- rep(1E2/3, 721)
 
 acute_exposure_matrix_high <- matrix(c(time_dr, dose_a_high), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
 periodic_exposure_matrix_high <- matrix(c(time_dr, dose_b_high), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
 constant_exposure_matrix_high <- matrix(c(time_dr, dose_c_high), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
 
-dose_a_very_high <- c(rep(0, 24), 1E11*exp(-time_dr[1:697]))
-dose_b_very_high <- 1E11/19.15*abs(sin(time_dr))
-dose_c_very_high <- rep(1E10/3, 721)
+dose_a_very_high <- c(rep(0, 24), 1E5*exp(-time_dr[1:697]))
+dose_b_very_high <- 1E5/19.15*abs(sin(time_dr))
+dose_c_very_high <- rep(1E4/3, 721)
 
 acute_exposure_matrix_very_high <- matrix(c(time_dr, dose_a_very_high), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
 periodic_exposure_matrix_very_high <- matrix(c(time_dr, dose_b_very_high), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
@@ -1380,33 +1380,33 @@ We see that for the decay values corresponding to less than 1E-3, the computed r
 
 
 ```{r}
-data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E3))[.N, response]
-data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E3))[.N, response_addition*(1-decay)]
-
-data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E4))[.N, response]
-data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E4))[.N, response_addition*(1-decay)]
-
 data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E5))[.N, response]
 data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E5))[.N, response_addition*(1-decay)]
 
 data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E6))[.N, response]
 data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E6))[.N, response_addition*(1-decay)]
+
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E7))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E7))[.N, response_addition*(1-decay)]
+
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E8))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E8))[.N, response_addition*(1-decay)]
 ```
 
 ```{r}
-data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E3))[.N, response]
-data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E3))[.N, response_addition*(1-decay)]
-
-data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E4))[.N, response]
-data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E4))[.N, response_addition*(1-decay)]
-
 data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E5))[.N, response]
 data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E5))[.N, response_addition*(1-decay)]
 
 data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E6))[.N, response]
 data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E6))[.N, response_addition*(1-decay)]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E7))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E7))[.N, response_addition*(1-decay)]
+
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E8))[.N, response]
+data.table(response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E8))[.N, response_addition*(1-decay)]
 ```
-To quanitfy the decay value distribution a bit more, see the output of the chunk below.
+To quantify the decay value distribution a bit more, see the output of the chunk below.
 
 ```{r}
 quantile(data.table(response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))[decay>0,decay], c(0.01, .99))
@@ -1448,75 +1448,87 @@ We can also determine for how long the response is above a given set of threshol
 First for the high periodic exposure.
 
 ```{r, eval=section_pre_eq_dr}
-thresholds_periodic <- c('zero' = 0, 'low' = 1E-6, 'medium' = 1E-5, 'high' = 3E-5, 'very high' = 5E-5)
+thresholds_periodic <- c('zero' = 0, 'low' = 1E-1, 'medium' = 3E-1, 'high' = 5E-1, 'very high' = 7E-1)
 
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))
+threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))
+threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E0))
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_1$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))
 ```
 
 Thresholds for high acute exposure.
 
 ```{r, eval=section_pre_eq_dr}
-thresholds_acute <- c('zero' = 0, 'low' = 1E-5, 'medium' = 1E-4, 'high' = 2E-4)
+thresholds_acute <- c('zero' = 0, 'low' = 1E-1, 'medium' = 3E-1, 'high' = 5E-1, 'very high' = 7E-1)
 
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))
+threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))
+threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E0))
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_2$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))
 ```
 
 And thresholds for high constant exposure.
 
 ```{r, eval=section_pre_eq_dr}
-thresholds_constant <- c('zero' = 0, 'low' = 1E-6, 'medium' = 1E-5, 'high' = 5E-5)
+thresholds_constant <- c('zero' = 0, 'low' = 1E-1, 'medium' = 3E-1, 'high' = 5E-1, 'very high' = 7E-1)
 
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))
+threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))
+threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E0))
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_3$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))
 ```
 
 
-Observe that the total response AUC in all three exposure scenarios is lower for the slower decay than the faster decay (1.47E-3 vs 2.83E-3 in periodic, 1.89E-3 vs 2.93E-3 in acute, 1.47E-3 vs 2.83E-3 in constant). Similarly, response levels are higher in the faster decay scenarios than the slower decay scenarios. The transition between slow decay and fast decay also presents some interesting behavior. While there is a trend that higher threshold values are exceeded longer for fast decay speed compared to slow decay speed, the time exceeded and response sum above the thresholds actually peak for mid-range decay speed. This intuitively makes sense since the decay speed controls a tradeoff between peak response level and decay of response. Very slow decay peaks at lower values and remains above baseline longer while very fast decay peaks higher but decays faster. The middle ground of mid-range response decay will peak in between, but also remain at elevated levels longer. 
+Observe that the total response AUC in all three exposure scenarios is lower for the slower decay than the faster decay (1.448E1 vs 2.817E1 in periodic, 1.829E1 vs 2.973E1 in acute, 1.4751E1 vs 2.815E1 in constant). Similarly, response levels are higher in the faster decay scenarios than the slower decay scenarios. The transition between slow decay and fast decay also presents some interesting behavior. While there is a trend that higher threshold values are exceeded longer for fast decay speed compared to slow decay speed, the time exceeded and response sum above the thresholds actually peak for mid-range decay speed. This intuitively makes sense since the decay speed controls a tradeoff between peak response level and decay of response. Very slow decay peaks at lower values and remains above baseline longer while very fast decay peaks higher but decays faster. The middle ground of mid-range response decay will peak in between, but also remain at elevated levels longer. 
 
 We repeat for the very high exposure scenarios.
 
 First for the very high periodic exposure.
 
 ```{r, eval=section_pre_eq_dr}
-thresholds_periodic <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
+thresholds_periodic <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 4E1, 'very high' = 4.5E1, 'highest' = 5E1)
 
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))
+threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))
+threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E0))
 threshold_exceedance(thresholds = thresholds_periodic, response_data = response_decay_exponential(plasma_data = single_person_4$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))
 ```
 
 Thresholds for very high acute exposure.
 
 ```{r, eval=section_pre_eq_dr}
-thresholds_acute <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
+thresholds_acute <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 4E1, 'very high' = 4.5E1, 'highest' = 5E1)
 
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))
+threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))
+threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E0))
 threshold_exceedance(thresholds = thresholds_acute, response_data = response_decay_exponential(plasma_data = single_person_5$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))
 ```
 
 And thresholds for very high constant exposure.
 
 ```{r, eval=section_pre_eq_dr}
-thresholds_constant <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 5E1, 'very high' = 1E2)
+thresholds_constant <- c('zero' = 0, 'low' = 1, 'medium' = 1E1, 'mid' = 3E1, 'high' = 4E1, 'very high' = 4.5E1, 'highest' = 5E1)
 
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-5))
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-3))
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-2))
+threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E-1))
+threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E0))
 threshold_exceedance(thresholds = thresholds_constant, response_data = response_decay_exponential(plasma_data = single_person_6$numeric$`Person 1`, max = tox21_dt40_657$resp_max, AC50 = 10^tox21_dt40_657$logAC50, n = 1, k_off = 2.5E-7, k_on=1.4E1))
 ```
 
-In the case of very high exposure scenarios, the decay rates are all relatively fast given the magnitude of the blood plasma concentrations and the association constant. Hence, there is little difference in the various combinations of decay constant values and times exceeding different thresholds. However, it is clear that the time exceeding thresholds and sum of response over those thresholds does differ by scenario. For instance, the overall response sum for lower thresholds (0, 1) is higher in the periodic and constant exposure scenarios than the acute exposure scenario and similarly for mid range thresholds (1E1). Also of note, the acute exposure has higher time exceeding higher thresholds (5E1) than the periodic and constant exposure scenarios.
+In the case of very high exposure scenarios, the decay rates are all relatively fast given the magnitude of the blood plasma concentrations and the association constant. Hence, there is little difference in the various combinations of decay constant values and times exceeding different thresholds when $K_{\text{on}}$ is at least 1E-1 . However, it is clear that the time exceeding thresholds and sum of response over those thresholds does differ by scenario. For instance, the overall response sum for lower thresholds (0, 1) is generally higher in the periodic and constant exposure scenarios than the acute exposure scenario and similarly for mid range thresholds (1E1). Also of note, the acute exposure has higher time exceeding higher thresholds (4.5E1 and 5E1) than the periodic and constant exposure scenarios.
 
 ## Variations in dose response due to binding kinetics
 
@@ -1531,11 +1543,11 @@ We will examine $K_D$ values of 1E-15, 1E-14, 1E-13, 1E-12, 1E-11, 1E-10. For ea
 Periodic low exposure.
 
 ```{r, eval=section_pre_eq_dr}
-ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
-ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
-ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
-ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
-ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 10^(-3), n = 1, k_off = 1E-9, k_on=1E6), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 1E-3, n = 1, k_off = 1E-9, k_on=1E2), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 1E-3, n = 1, k_off = 1E-9, k_on=1E3), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 1E-3, n = 1, k_off = 1E-9, k_on=1E4), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 1E-3, n = 1, k_off = 1E-9, k_on=1E5), aes(time, response)) + geom_point() + geom_line()
+ggplot(response_decay_exponential(plasma_data = single_person_7$numeric$`Person 1`, max = 100, AC50 = 1E-3, n = 1, k_off = 1E-9, k_on=1E6), aes(time, response)) + geom_point() + geom_line()
 ```
 
 Acute low exposure.
