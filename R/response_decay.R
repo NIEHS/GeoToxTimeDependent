@@ -101,7 +101,7 @@ response_decay <- function(plasma_data = NULL,
 #' @param plasma_data A data.frame containing plasma concentration data. Must
 #'   contain columns `time` (in days) and `Cplasma` (in \eqn{\mu}M).
 #' @param max The max response level for assay.
-#' @param AC50 AC50 level for assay.
+#' @param AC50 AC50 level for assay (in \eqn{\mu}M).
 #' @param n The slope factor for the assay response.
 #' @param K_decay Response decay constant in units \eqn{s^{-1}}.
 #' @param k_off Dissociation constant in units \eqn{s^{-1}}
@@ -147,7 +147,7 @@ response_decay_exponential <- function(plasma_data = NULL,
   plasma <- plasma_data[, p_idx]
 
   # Convert plasma from uM to M, 1E-6 conversion factor
-  plasma <- plasma*1E-6
+  #plasma <- plasma*1E-6
 
 
   response <- numeric(length(times))
@@ -162,7 +162,8 @@ response_decay_exponential <- function(plasma_data = NULL,
     for (i in 1:length(time_diffs)){
       current_response <- response[[i]]
       response_addition <- hill_val(conc = plasma[[i]], max = max, AC50 = AC50, n = n)
-      decay_coefficient <- k_off + k_on*plasma[[i]]
+      # Decay coefficients are in M while plasma is in uM. Convert to M by scaling plasma by 1E-6
+      decay_coefficient <- k_off + k_on*plasma[[i]]*1E-6
       time_interval <- time_diffs[[i]]
       # Convert time from days to seconds, conversion factor
       # t day * 24 hours/day * 3600 seconds/day
