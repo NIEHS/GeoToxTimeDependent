@@ -20,7 +20,7 @@ contain columns \code{time} (in days) and \code{Cplasma} (in \eqn{\mu}M).}
 
 \item{max}{The max response level for assay.}
 
-\item{AC50}{AC50 level for assay.}
+\item{AC50}{AC50 level for assay (in \eqn{\mu}M).}
 
 \item{n}{The slope factor for the assay response.}
 
