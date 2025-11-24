@@ -33,6 +33,7 @@ renv.lock
 
 # figure generation
 inst/Figure_generation.R
+inst/SOT_simulations
 
 # produced vignettes
 vignettes/*.html
