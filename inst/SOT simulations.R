@@ -57,7 +57,7 @@ fifties_norm <- simulate_population_variability_parameters(chem.cas = chem.cas,
                                                           samples = samples,
                                                           set_seed = TRUE,
                                                           seed = 2345)
-sixties_norm <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+sixties_norm <- simulate_population_variability_parameters(chem.cas = chem.cas,
                                                           agelim_years = c(60, 69),
                                                           weight_category = 'Normal',
                                                           samples = samples,
@@ -80,7 +80,7 @@ twenties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
                                                               seed = 2345)
 thirties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
                                                               agelim_years = c(30, 39),
-                                                              weight_category = 'Normal',
+                                                              weight_category = 'Obese',
                                                               samples = samples,
                                                               set_seed = TRUE,
                                                               seed = 2345)
@@ -92,13 +92,13 @@ fourties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
                                                               seed = 2345)
 fifties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
                                                              agelim_years = c(50, 59),
-                                                             weight_category = 'Normal',
+                                                             weight_category = 'Obese',
                                                              samples = samples,
                                                              set_seed = TRUE,
                                                              seed = 2345)
 sixties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
                                                              agelim_years = c(60, 69),
-                                                             weight_category = 'Normal',
+                                                             weight_category = 'Obese',
                                                              samples = samples,
                                                              set_seed = TRUE,
                                                              seed = 2345)
@@ -288,7 +288,7 @@ httk_distributions <- function(exposure_sims = list(),
                            Scenario = Scenario,
                            Weight = 'Normal')
 
-  print(head(normal_httk, 10))
+  #print(head(normal_httk, 10))
 
   cplasma_max_normal <- ggplot(normal_httk[-c((num_people+1)*1:length(normal_exposure)),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
   auc_normal <- ggplot(normal_httk[-c((num_people+1)*1:length(normal_params)),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
@@ -314,9 +314,34 @@ httk_distributions <- function(exposure_sims = list(),
                                    'auc_obese' = auc_obese))))
 }
 
-populations_test <- pop_simulator(chem.cas = '87-86-5', samples = 5)
-parameters_test <- simulate_parameters(chem.cas = '87-86-5', mcs = populations_test)
-acute_test <- acute_exposure(chem.cas = '87-86-5', sim_parms = parameters_test, acute_matrix = acute_exposure_matrix)
-periodic_test <- periodic_exposure(chem.cas = '87-86-5', sim_parms = parameters_test, periodic_matrix = periodic_exposure_matrix)
-constant_test <- constant_exposure(chem.cas = '87-86-5', sim_parms = parameters_test, constant_matrix = constant_exposure_matrix)
-distributions_test <- httk_distributions(exposure_sims = acute_test, exposure_params = parameters_test, Scenario = 'Acute', num_people = 5)
+run_simulations <- function(chem.cas = '',
+                            num_people = num_people,
+                            overwrite = FALSE){
+  current_path <- paste0(getwd(), '/inst/SOT_simulations')
+  if (dir.exists(paste0(current_path, '/', chem.cas)) & !overwrite){
+    stop('Directory already exists! Either move contents of directory and change chemical!')
+  }
+
+  dir.create(paste0(current_path, '/', chem.cas))
+
+populations_test <- pop_simulator(chem.cas = chem.cas, samples = num_people)
+parameters_test <- simulate_parameters(chem.cas = chem.cas, mcs = populations_test)
+acute_test <- acute_exposure(chem.cas = chem.cas, sim_parms = parameters_test, acute_matrix = acute_exposure_matrix)
+periodic_test <- periodic_exposure(chem.cas = chem.cas, sim_parms = parameters_test, periodic_matrix = periodic_exposure_matrix)
+constant_test <- constant_exposure(chem.cas = chem.cas, sim_parms = parameters_test, constant_matrix = constant_exposure_matrix)
+acute_distributions <- httk_distributions(exposure_sims = acute_test, exposure_params = parameters_test, Scenario = 'Acute', num_people = num_people)
+periodic_distributions <- httk_distributions(exposure_sims = periodic_test, exposure_params = parameters_test, Scenario = 'Periodic', num_people = num_people)
+constant_distributions <- httk_distributions(exposure_sims = constant_test, exposure_params = parameters_test, Scenario = 'Constant', num_people = num_people)
+
+
+saveRDS(populations_test, file = paste0(current_path, '/', chem.cas, '/', 'population.RDS'))
+saveRDS(parameters_test, file = paste0(current_path, '/', chem.cas, '/', 'parameters.RDS'))
+saveRDS(acute_test, file = paste0(current_path, '/', chem.cas, '/', 'acute_exposure.RDS'))
+saveRDS(periodic_test, file = paste0(current_path, '/', chem.cas, '/', 'periodic_exposure.RDS'))
+saveRDS(constant_test, file = paste0(current_path, '/', chem.cas, '/', 'constant_exposure.RDS'))
+saveRDS(acute_distributions, file = paste0(current_path, '/', chem.cas, '/', 'acute_distribution.RDS'))
+saveRDS(periodic_distributions, file = paste0(current_path, '/', chem.cas, '/', 'periodic_distribution.RDS'))
+saveRDS(constant_distributions, file = paste0(current_path, '/', chem.cas, '/', 'constant_distribution.RDS'))
+#print(paste0(getwd(), '/inst/SOT_simulations'))
+}
+
