@@ -1,0 +1,322 @@
+# Load libraries
+library(httk)
+library(dplyr)
+library(tidyr)
+library(data.table)
+#library(GeoTox)
+library(gganimate)
+library(gifski)
+library(ggridges)
+devtools::load_all()
+
+# Generate exposure scenarios. Same three across all chemicals, populations
+time <- seq(from = 0, to = 30, by = 1/24)
+dose_a <- c(rep(0, 24), 100*exp(-time[1:697]))
+dose_b <- 100/19.15*abs(sin(time))
+dose_c <- rep(10/3, length(time))
+
+acute_exposure_matrix <- matrix(c(time, dose_a), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
+periodic_exposure_matrix <- matrix(c(time, dose_b), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
+constant_exposure_matrix <- matrix(c(time, dose_c), ncol = 2, dimnames = list(NULL, c('time', 'dose')))
+
+# List of chemicals
+chemical_casns <- c("53-96-3", "95-95-4", "88-06-2", "91-94-1", "119-90-4",
+                    "60-11-7", "100-02-7", "101-14-4", "101-77-9", "92-87-5",
+                    "133-06-2", "63-25-2", "120-80-9", "510-15-6", "84-74-2",
+                    "123-31-9", "72-43-5", "106-50-3", "56-38-2", "87-86-5",
+                    "95-80-7")
+
+
+num_people <- 500
+
+pop_simulator <- function(chem.cas = '',
+                          samples = num_people){
+
+# Simulate populations of 10 year intervals, 'normal' weight category
+twenties_norm <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                           agelim_years = c(20, 29),
+                                                           weight_category = 'Normal',
+                                                           samples = samples,
+                                                           set_seed = TRUE,
+                                                           seed = 2345)
+thirties_norm <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                           agelim_years = c(30, 39),
+                                                           weight_category = 'Normal',
+                                                           samples = samples,
+                                                           set_seed = TRUE,
+                                                           seed = 2345)
+fourties_norm <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                           agelim_years = c(40, 49),
+                                                           weight_category = 'Normal',
+                                                           samples = samples,
+                                                           set_seed = TRUE,
+                                                           seed = 2345)
+fifties_norm <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                          agelim_years = c(50, 59),
+                                                          weight_category = 'Normal',
+                                                          samples = samples,
+                                                          set_seed = TRUE,
+                                                          seed = 2345)
+sixties_norm <- simulate_population_variability_parameters(chem.cas = '87-86-5',
+                                                          agelim_years = c(60, 69),
+                                                          weight_category = 'Normal',
+                                                          samples = samples,
+                                                          set_seed = TRUE,
+                                                          seed = 2345)
+seventies_norm <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                            agelim_years = c(70, 79),
+                                                            weight_category = 'Normal',
+                                                            samples = samples,
+                                                            set_seed = TRUE,
+                                                            seed = 2345)
+
+#simulate populations of 10 year intervals, 'obese' weight category
+
+twenties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                              agelim_years = c(20, 29),
+                                                              weight_category = 'Obese',
+                                                              samples = samples,
+                                                              set_seed = TRUE,
+                                                              seed = 2345)
+thirties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                              agelim_years = c(30, 39),
+                                                              weight_category = 'Normal',
+                                                              samples = samples,
+                                                              set_seed = TRUE,
+                                                              seed = 2345)
+fourties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                              agelim_years = c(40, 49),
+                                                              weight_category = 'Obese',
+                                                              samples = samples,
+                                                              set_seed = TRUE,
+                                                              seed = 2345)
+fifties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                             agelim_years = c(50, 59),
+                                                             weight_category = 'Normal',
+                                                             samples = samples,
+                                                             set_seed = TRUE,
+                                                             seed = 2345)
+sixties_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                             agelim_years = c(60, 69),
+                                                             weight_category = 'Normal',
+                                                             samples = samples,
+                                                             set_seed = TRUE,
+                                                             seed = 2345)
+seventies_ob <- simulate_population_variability_parameters(chem.cas = chem.cas,
+                                                               agelim_years = c(70, 79),
+                                                               weight_category = 'Obese',
+                                                               samples = samples,
+                                                               set_seed = TRUE,
+                                                               seed = 2345)
+return(list('normal' = list('twenties_norm' = twenties_norm,
+                            'thirties_norm' = thirties_norm,
+                            'fourties_norm' = fourties_norm,
+                            'fifties_norm' = fifties_norm,
+                            'sixties_norm' = sixties_norm,
+                            'seventies_norm' = seventies_norm),
+            'obese' = list('twenties_ob' = twenties_ob,
+                           'thirties_ob' = thirties_ob,
+                           'fourties_ob' = fourties_ob,
+                           'fifties_ob' = fifties_ob,
+                           'sixties_ob' = sixties_ob,
+                           'seventies_ob' = seventies_ob)))
+}
+
+# Simulation parameters
+
+simulate_parameters <- function(chem.cas = '',
+                                mcs = list()){
+
+  normal_pop <- mcs$normal
+  obese_pop <- mcs$obese
+
+  norm_20_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = normal_pop$twenties_norm)
+  norm_30_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = normal_pop$thirties_norm)
+  norm_40_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = normal_pop$fourties_norm)
+  norm_50_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = normal_pop$fifties_norm)
+  norm_60_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = normal_pop$sixties_norm)
+  norm_70_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = normal_pop$seventies_norm)
+
+  obese_20_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = obese_pop$twenties_ob)
+  obese_30_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = obese_pop$thirties_ob)
+  obese_40_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = obese_pop$fourties_ob)
+  obese_50_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = obese_pop$fifties_ob)
+  obese_60_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = obese_pop$sixties_ob)
+  obese_70_param <- parametrize_httk(chem.cas = chem.cas, model = 'pbtk', mcs = obese_pop$seventies_ob)
+
+  return(list('normal' = list('norm_20_param' = norm_20_param,
+                              'norm_30_param' = norm_30_param,
+                              'norm_40_param' = norm_40_param,
+                              'norm_50_param' = norm_50_param,
+                              'norm_60_param' = norm_60_param,
+                              'norm_70_param' = norm_70_param),
+              'obese' = list('obese_20_param' = obese_20_param,
+                             'obese_30_param' = obese_30_param,
+                             'obese_40_param' = obese_40_param,
+                             'obese_50_param' = obese_50_param,
+                             'obese_60_param' = obese_60_param,
+                             'obese_70_param' = obese_70_param)))
+}
+
+# Exposure simualtions
+
+acute_exposure <- function(chem.cas = '',
+                           sim_parms = list(),
+                           acute_matrix = matrix()){
+
+  norm_parms <- sim_parms$normal
+  obese_parms <- sim_parms$obese
+
+  acute_norm_20 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_20_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_norm_30 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_30_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_norm_40 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_40_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_norm_50 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_50_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_norm_60 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_60_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_norm_70 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_70_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+
+  acute_obese_20 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_20_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_obese_30 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_30_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_obese_40 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_40_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_obese_50 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_50_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_obese_60 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_60_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+  acute_obese_70 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_70_param, plot = TRUE, data.matrix = acute_matrix, plot_average = TRUE)
+
+  return(list('normal' = list('acute_norm_20' = acute_norm_20,
+                              'acute_norm_30' = acute_norm_30,
+                              'acute_norm_40' = acute_norm_40,
+                              'acute_norm_50' = acute_norm_50,
+                              'acute_norm_60' = acute_norm_60,
+                              'acute_norm_70' = acute_norm_70),
+              'obese' = list('acute_obese_20' = acute_obese_20,
+                             'acute_obese_30' = acute_obese_30,
+                             'acute_obese_40' = acute_obese_40,
+                             'acute_obese_50' = acute_obese_50,
+                             'acute_obese_60' = acute_obese_60,
+                             'acute_obese_70' = acute_obese_70)))
+}
+
+periodic_exposure <- function(chem.cas = '',
+                              sim_parms = list(),
+                              periodic_matrix = matrix()){
+
+  norm_parms <- sim_parms$normal
+  obese_parms <- sim_parms$obese
+
+  periodic_norm_20 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_20_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_norm_30 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_30_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_norm_40 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_40_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_norm_50 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_50_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_norm_60 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_60_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_norm_70 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_70_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+
+  periodic_obese_20 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_20_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_obese_30 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_30_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_obese_40 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_40_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_obese_50 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_50_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_obese_60 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_60_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+  periodic_obese_70 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_70_param, plot = TRUE, data.matrix = periodic_matrix, plot_average = TRUE)
+
+  return(list('normal' = list('periodic_norm_20' = periodic_norm_20,
+                              'periodic_norm_30' = periodic_norm_30,
+                              'periodic_norm_40' = periodic_norm_40,
+                              'periodic_norm_50' = periodic_norm_50,
+                              'periodic_norm_60' = periodic_norm_60,
+                              'periodic_norm_70' = periodic_norm_70),
+              'obese' = list('periodic_obese_20' = periodic_obese_20,
+                             'periodic_obese_30' = periodic_obese_30,
+                             'periodic_obese_40' = periodic_obese_40,
+                             'periodic_obese_50' = periodic_obese_50,
+                             'periodic_obese_60' = periodic_obese_60,
+                             'periodic_obese_70' = periodic_obese_70)))
+}
+
+constant_exposure <- function(chem.cas = '',
+                              sim_parms = list(),
+                              constant_matrix = matrix()){
+
+  norm_parms <- sim_parms$normal
+  obese_parms <- sim_parms$obese
+
+  constant_norm_20 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_20_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_norm_30 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_30_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_norm_40 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_40_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_norm_50 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_50_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_norm_60 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_60_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_norm_70 <- solve_httk_model(chem.cas = chem.cas, parameters = norm_parms$norm_70_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+
+  constant_obese_20 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_20_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_obese_30 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_30_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_obese_40 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_40_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_obese_50 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_50_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_obese_60 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_60_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+  constant_obese_70 <- solve_httk_model(chem.cas = chem.cas, parameters = obese_parms$obese_70_param, plot = TRUE, data.matrix = constant_matrix, plot_average = TRUE)
+
+  return(list('normal' = list('constant_norm_20' = constant_norm_20,
+                              'constant_norm_30' = constant_norm_30,
+                              'constant_norm_40' = constant_norm_40,
+                              'constant_norm_50' = constant_norm_50,
+                              'constant_norm_60' = constant_norm_60,
+                              'constant_norm_70' = constant_norm_70),
+              'obese' = list('constant_obese_20' = constant_obese_20,
+                             'constant_obese_30' = constant_obese_30,
+                             'constant_obese_40' = constant_obese_40,
+                             'constant_obese_50' = constant_obese_50,
+                             'constant_obese_60' = constant_obese_60,
+                             'constant_obese_70' = constant_obese_70)))
+}
+
+# AUC and Cplasma distributions
+
+httk_distributions <- function(exposure_sims = list(),
+                               exposure_params = list(),
+                               Scenario = '',
+                               num_people){
+
+
+  normal_exposure <- exposure_sims$normal
+  obese_exposure <- exposure_sims$obese
+
+  normal_params <- exposure_params$normal
+  obese_params <- exposure_params$obese
+
+
+  normal_httk <- data.table(individual = rep(1:(num_people+1), length(normal_exposure)),
+                           Cplasma_max = unname(unlist(lapply(normal_exposure, function(t) {sapply(t$numeric, function(j) {max(j$Cplasma)})}))),
+                           AUC = unname(unlist(lapply(normal_exposure, function(t) {sapply(t$numeric, function(j) {max(j$AUC)})}))),
+                           BW = c(unname(unlist(lapply(normal_params, function(t) {c(t$BW, mean(t$BW))})))),
+                           Age = rep(c(10*(1+1:length(normal_exposure))), each = (num_people+1)),
+                           Scenario = Scenario,
+                           Weight = 'Normal')
+
+  print(head(normal_httk, 10))
+
+  cplasma_max_normal <- ggplot(normal_httk[-c((num_people+1)*1:length(normal_exposure)),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+  auc_normal <- ggplot(normal_httk[-c((num_people+1)*1:length(normal_params)),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+
+
+
+  obese_httk <- data.table(individual = rep(1:(num_people+1), length(obese_exposure)),
+                           Cplasma_max = unname(unlist(lapply(obese_exposure, function(t) {sapply(t$numeric, function(j) {max(j$Cplasma)})}))),
+                           AUC = unname(unlist(lapply(obese_exposure, function(t) {sapply(t$numeric, function(j) {max(j$AUC)})}))),
+                           BW = c(unname(unlist(lapply(obese_params, function(t) {c(t$BW, mean(t$BW))})))),
+                           Age = rep(c(10*(1+1:length(obese_exposure))), each = (num_people+1)),
+                           Scenario = Scenario,
+                           Weight = 'Obese')
+
+  cplasma_max_obese <- ggplot(obese_httk[-c((num_people+1)*1:length(obese_exposure)),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+  auc_obese <- ggplot(obese_httk[-c((num_people+1)*1:length(obese_exposure)),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+
+  return(list('normal' = list('normal_httk' = normal_httk,
+                       'plots' = list('cplasma_max_normal' = cplasma_max_normal,
+                                      'auc_normal' = auc_normal)),
+       'obese' = list('obese_httk' = obese_httk,
+                      plots = list('cplasma_max_obese' = cplasma_max_obese,
+                                   'auc_obese' = auc_obese))))
+}
+
+populations_test <- pop_simulator(chem.cas = '87-86-5', samples = 5)
+parameters_test <- simulate_parameters(chem.cas = '87-86-5', mcs = populations_test)
+acute_test <- acute_exposure(chem.cas = '87-86-5', sim_parms = parameters_test, acute_matrix = acute_exposure_matrix)
+periodic_test <- periodic_exposure(chem.cas = '87-86-5', sim_parms = parameters_test, periodic_matrix = periodic_exposure_matrix)
+constant_test <- constant_exposure(chem.cas = '87-86-5', sim_parms = parameters_test, constant_matrix = constant_exposure_matrix)
+distributions_test <- httk_distributions(exposure_sims = acute_test, exposure_params = parameters_test, Scenario = 'Acute', num_people = 5)
