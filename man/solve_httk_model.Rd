@@ -71,6 +71,6 @@ represented by the \code{parameters} argument.
 Solve time-dependant httk model
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

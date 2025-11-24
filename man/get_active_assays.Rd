@@ -23,7 +23,7 @@ CASRN, \code{dtxsid} for chemical DTXSID, \code{chnm} for chemical name,
 Retrieve assay data
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 # Retrieve information for `TOX21_DT40` assay for chemicals with DTXSIDs
 # `DTXSID5020865` and `DTXSID2045078`.
 g <- get_active_assays(assays =  c('TOX21_DT40'),

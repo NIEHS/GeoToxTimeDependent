@@ -19,6 +19,6 @@ Single row data.table of statistics of columns
 Get population statistics
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

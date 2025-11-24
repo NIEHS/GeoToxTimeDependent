@@ -60,6 +60,6 @@ into \eqn{f} to determine the new response,
 \eqn{r_{t + \Delta t} = f(a\times d_{t + \Delta t} + b\times f^{-1}(r^d_{t + \Delta t}))}.
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

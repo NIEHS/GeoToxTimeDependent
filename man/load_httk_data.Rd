@@ -11,6 +11,6 @@ This function loads in extended \code{httk} data and toggles the option
 \code{httk_data_loaded} to \code{TRUE}.
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

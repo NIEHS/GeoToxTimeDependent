@@ -54,6 +54,6 @@ level and \eqn{t_{ss}} is the time it takes the response to converge to
 See the description of \code{tol} below for more details.
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

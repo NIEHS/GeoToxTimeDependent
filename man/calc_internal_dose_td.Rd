@@ -27,6 +27,6 @@ Matrix of internal chemical doses in \eqn{\frac{mg}{kg}}.
 Calculate time-dependent internal chemical dose
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

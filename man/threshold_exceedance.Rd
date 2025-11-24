@@ -26,6 +26,6 @@ or list of threshold values and a time-series of response data output from
 the function \code{\link[=response_decay]{response_decay()}}.
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

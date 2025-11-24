@@ -33,6 +33,6 @@ weight parameters, including median values grouped by weight and by age.
 Generate steady state concentration (CSS)
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

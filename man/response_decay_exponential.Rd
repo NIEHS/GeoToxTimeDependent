@@ -47,6 +47,6 @@ constant \eqn{K} is either \code{K_decay} in the dose-independent setting or
 dose-dependent setting.
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

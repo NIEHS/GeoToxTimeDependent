@@ -11,6 +11,6 @@ Helper function that resets loaded \code{httk} data and toggles the option
 \code{httk_data_loaded} to \code{FALSE}.
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 \dontshow{\}) # examplesIf}
 }

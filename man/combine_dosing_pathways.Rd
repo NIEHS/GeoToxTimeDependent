@@ -18,7 +18,7 @@ chemical exposures across all time points in the time-series exposure data.
 Combine dosing data from multiple pathways
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 a <- matrix(c(seq(from = 0, to = 1, by = .1), 20*exp(-1*0:10)),
  ncol = 2, dimnames = list(NULL, c('time', 'dose')))
 b <- matrix(c(seq(from = 0, to = 1, by = 1/6), 1:7),

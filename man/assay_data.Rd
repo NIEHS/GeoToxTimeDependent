@@ -13,7 +13,7 @@ data.frame of assay data.
 Retrieve assay data from environmental variables
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
 # Examine assay data
 head(b)
 \dontshow{\}) # examplesIf}
