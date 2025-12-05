@@ -7,6 +7,7 @@ library(data.table)
 library(gganimate)
 library(gifski)
 library(ggridges)
+library(cowplot)
 devtools::load_all()
 
 # Generate exposure scenarios. Same three across all chemicals, populations
@@ -340,6 +341,88 @@ periodic_distributions <- httk_distributions(exposure_sims = periodic_test, expo
 constant_distributions <- httk_distributions(exposure_sims = constant_test, exposure_params = parameters_test, Scenario = 'Constant', num_people = num_people)
 
 
+# print(paste0(current_path, '/', chem.cas, '/', 'Cplasma_AUC_acute.pdf'))
+# plot_grid(acute_distributions$normal$plots$auc_normal + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, normal weight, acute exposure', 'CASRN', chem.cas)),
+#           acute_distributions$obese$plots$auc_obese + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, obese weight, acute exposure', 'CASRN', chem.cas)))
+# Save plots as PDF
+ggsave(filename = paste0(current_path, '/', chem.cas, '/', 'Cplasma_AUC_acute.pdf'),
+       plot = plot_grid(acute_distributions$normal$plots$auc_normal + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, normal weight, acute exposure', 'CASRN', chem.cas)),
+                        acute_distributions$obese$plots$auc_obese + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, obese weight, acute exposure', 'CASRN', chem.cas))),
+       width = 20,
+       height = 14,
+       units = 'in')
+# pdf(file = paste0(current_path, '/', chem.cas, '/', 'Cplasma_AUC_acute.pdf'), width = 20, height = 14)
+# plot_grid(acute_distributions$normal$plots$auc_normal + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, normal weight, acute exposure', 'CASRN', chem.cas)),
+#           acute_distributions$obese$plots$auc_obese + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, obese weight, acute exposure', 'CASRN', chem.cas)))
+# dev.off()
+
+ggsave(filename = paste0(current_path, '/', chem.cas, '/', 'Cplasma_AUC_periodic.pdf'),
+       plot = plot_grid(periodic_distributions$normal$plots$auc_normal + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, normal weight, periodic exposure', 'CASRN', chem.cas)),
+                        periodic_distributions$obese$plots$auc_obese + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, obese weight, periodic exposure', 'CASRN', chem.cas))),
+       width = 20,
+       height = 14,
+       units = 'in'
+)
+# pdf(file = paste0(current_path, '/', chem.cas, '/', 'Cplasma_AUC_periodic.pdf'), width = 20, height = 14)
+# plot_grid(periodic_distributions$normal$plots$auc_normal + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, normal weight, periodic exposure', 'CASRN', chem.cas)),
+#           periodic_distributions$obese$plots$auc_obese + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, obese weight, periodic exposure', 'CASRN', chem.cas)))
+# dev.off()
+
+ggsave(filename = paste0(current_path, '/', chem.cas, '/', 'Cplasma_AUC_constant.pdf'),
+       plot = plot_grid(constant_distributions$normal$plots$auc_normal + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, normal weight, constant exposure', 'CASRN', chem.cas)),
+                        constant_distributions$obese$plots$auc_obese + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, obese weight, constant exposure', 'CASRN', chem.cas))),
+       width = 20,
+       height = 14,
+       units = 'in')
+
+# pdf(file = paste0(current_path, '/', chem.cas, '/', 'Cplasma_AUC_constant.pdf'), width = 20, height = 14)
+# plot_grid(constant_distributions$normal$plots$auc_normal + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, normal weight, constant exposure', 'CASRN', chem.cas)),
+#           constant_distributions$obese$plots$auc_obese + scale_x_log10() + labs(title = paste('Distribution of Cplasma AUC values, obese weight, constant exposure', 'CASRN', chem.cas)))
+# dev.off()
+
+ggsave(filename = paste0(current_path, '/', chem.cas, '/', 'Max_Cplasma_acute.pdf'),
+       plot = plot_grid(acute_distributions$normal$plots$cplasma_max_normal + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, normal weight, acute exposure', 'CASRN', chem.cas)),
+                        acute_distributions$obese$plots$cplasma_max_obese + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, obese weight, acute exposure', 'CASRN', chem.cas))),
+       width = 20,
+       height = 14,
+       units = 'in')
+
+# pdf(file = paste0(current_path, '/', chem.cas, '/', 'Max_Cplasma_acute.pdf'), width = 20, height = 14)
+# plot_grid(acute_distributions$normal$plots$cplasma_max_normal + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, normal weight, acute exposure', 'CASRN', chem.cas)),
+#           acute_distributions$obese$plots$cplasma_max_obese + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, obese weight, acute exposure', 'CASRN', chem.cas)))
+# dev.off()
+
+ggsave(filename = paste0(current_path, '/', chem.cas, '/', 'Max_Cplasma_periodic.pdf'),
+       plot = plot_grid(periodic_distributions$normal$plots$cplasma_max_normal + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, normal weight, periodic exposure', 'CASRN', chem.cas)),
+                        periodic_distributions$obese$plots$cplasma_max_obese + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, obese weight, periodic exposure', 'CASRN', chem.cas))),
+       width = 20,
+       height = 14,
+       units = 'in')
+
+# pdf(file = paste0(current_path, '/', chem.cas, '/', 'Max_Cplasma_periodic.pdf'), width = 20, height = 14)
+# plot_grid(periodic_distributions$normal$plots$cplasma_max_normal + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, normal weight, periodic exposure', 'CASRN', chem.cas)),
+#           periodic_distributions$obese$plots$cplasma_max_obese + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, obese weight, periodic exposure', 'CASRN', chem.cas)))
+# dev.off()
+
+ggsave(filename = paste0(current_path, '/', chem.cas, '/', 'Max_Cplasma_constant.pdf'),
+       plot = plot_grid(constant_distributions$normal$plots$cplasma_max_normal + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, normal weight, constant exposure', 'CASRN', chem.cas)),
+                        constant_distributions$obese$plots$cplasma_max_obese + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, obese weight, constant exposure', 'CASRN', chem.cas))),
+       width = 20,
+       height = 14,
+       units = 'in')
+
+# pdf(file = paste0(current_path, '/', chem.cas, '/', 'Max_Cplasma_constant.pdf'), width = 20, height = 14)
+# plot_grid(constant_distributions$normal$plots$cplasma_max_normal + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, normal weight, constant exposure', 'CASRN', chem.cas)),
+#           constant_distributions$obese$plots$cplasma_max_obese + scale_x_log10() + labs(title = paste('Distribution of maximum Cplasma values, obese weight, constant exposure', 'CASRN', chem.cas)))
+# dev.off()
+
+acute_distributions$normal$plots <- NULL
+acute_distributions$obese$plots <- NULL
+periodic_distributions$normal$plots <- NULL
+periodic_distributions$obese$plots <- NULL
+constant_distributions$normal$plots <- NULL
+constant_distributions$obese$plots <- NULL
+
 saveRDS(populations_test, file = paste0(current_path, '/', chem.cas, '/', 'population.RDS'))
 saveRDS(parameters_test, file = paste0(current_path, '/', chem.cas, '/', 'parameters.RDS'))
 saveRDS(acute_test, file = paste0(current_path, '/', chem.cas, '/', 'acute_exposure.RDS'))
@@ -350,4 +433,5 @@ saveRDS(periodic_distributions, file = paste0(current_path, '/', chem.cas, '/', 
 saveRDS(constant_distributions, file = paste0(current_path, '/', chem.cas, '/', 'constant_distribution.RDS'))
 #print(paste0(getwd(), '/inst/SOT_simulations'))
 }
+
 
