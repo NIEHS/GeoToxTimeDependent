@@ -478,6 +478,30 @@ saveRDS(constant_distributions, file = paste0(current_path, '/', chem.cas, '/', 
 # normal_table <- rbind(normal_101_14_4, normal_101_77_9, normal_106_50_3, normal_107_21_1, normal_111_44_4, normal_114_26_1, normal_117_81_7, normal_119_90_4, normal_120_80_9, normal_121_14_2, normal_121_69_7, normal_123_31_9, normal_131_11_3, normal_133_90_4, normal_51_28_5, normal_51_79_6, normal_510_15_6, normal_532_27_4, normal_534_52_1, normal_53_96_3, normal_56_38_2, normal_584_84_9, normal_60_11_7, normal_63_25_2, normal_64_67_5, normal_72_43_5, normal_77_78_1, normal_79_44_7, normal_822_06_0, normal_84_74_2, normal_87_86_5, normal_88_06_2, normal_91_22_5, normal_92_87_5, normal_94_75_7, normal_95_80_7, normal_95_95_4, normal_96_09_3, normal_98_86_2)
 # normal_table[individual != 501, .(Cplasma_max_ratio_ap = mean(Cplasma_max.a/Cplasma_max), Cplasma_max_ratio_ac = mean(Cplasma_max.a/Cplasma_max.c), AUC_ratio_ap = mean(AUC.a/AUC), AUC_ratio_ac = mean(AUC.a/AUC.c), Cplasma_max_ap = sum(Cplasma_max.a > Cplasma_max), Cplasma_max_pc = sum(Cplasma_max > Cplasma_max.c), AUC_pc = sum(AUC > AUC.c)), by = .(casn, Age)]
 
+# Prepare the time-to-steadystate values for 'normal' and 'obese'
+# df_normal_532_27_4 <- data.frame(avg = numeric(3000), frac = numeric(3000), max = numeric(3000), the.day = numeric(3000), Age = numeric(3000), individual = numeric(3000))
+# for (i in 1:500){ df_normal_532_27_4[i,] <- cbind(as.data.frame(httk::calc_css(chem.cas = '532-27-4', parameters = parameters_532_27_4$normal$norm_20_param[i,])), Age = 20)
+#  df_normal_532_27_4[i + 500,] <- cbind(as.data.frame(httk::calc_css(chem.cas = '532-27-4', parameters = parameters_532_27_4$normal$norm_30_param[i,])), Age = 30)
+#  df_normal_532_27_4[i + 1000,] <- cbind(as.data.frame(httk::calc_css(chem.cas = '532-27-4', parameters = parameters_532_27_4$normal$norm_40_param[i,])), Age = 40)
+#  df_normal_532_27_4[i + 1500,] <- cbind(as.data.frame(httk::calc_css(chem.cas = '532-27-4', parameters = parameters_532_27_4$normal$norm_50_param[i,])), Age = 50)
+#  df_normal_532_27_4[i + 2000,] <- cbind(as.data.frame(httk::calc_css(chem.cas = '532-27-4', parameters = parameters_532_27_4$normal$norm_60_param[i,])), Age = 60)
+#  df_normal_532_27_4[i + 2500,] <- cbind(as.data.frame(httk::calc_css(chem.cas = '532-27-4', parameters = parameters_532_27_4$normal$norm_70_param[i,])), Age = 70)
+#  if (i%%10 == 0){print(i)}
+# }
+# df_normal_532_27_4$casn <- '532-27-4'
+# df_normal_532_27_4$weight <- 'Normal'
+# df_normal_532_27_4$individual <- rep(1:500, 6)
+# normal_weight_css_table <- rbind(df_normal_51_28_5, df_normal_51_79_6, df_normal_53_96_3, df_normal_56_38_2,
+#                                  df_normal_60_11_7, df_normal_63_25_2, df_normal_64_67_5, df_normal_72_43_5,
+#                                  df_normal_77_78_1, df_normal_79_44_7, df_normal_84_74_2, df_normal_87_86_5,
+#                                  df_normal_88_06_2, df_normal_91_22_5, df_normal_92_87_5, df_normal_94_75_7,
+#                                  df_normal_95_80_7, df_normal_95_95_4, df_normal_96_09_3, df_normal_98_86_2,
+#                                  df_normal_101_14_4, df_normal_101_77_9, df_normal_106_50_3, df_normal_107_21_1,
+#                                  df_normal_111_44_4, df_normal_114_26_1, df_normal_117_81_7, df_normal_119_90_4,
+#                                  df_normal_120_80_9, df_normal_121_14_2, df_normal_121_69_7, df_normal_123_31_9,
+#                                  df_normal_131_11_3, df_normal_133_90_4, df_normal_510_15_6, df_normal_532_27_4,
+#                                  df_normal_534_52_1, df_normal_584_84_9, df_normal_822_06_0)
+
 # Analysis
 # setnames(normal_table, old = c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'),
 #          new = paste0(c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'), '.p'))
@@ -487,3 +511,10 @@ saveRDS(constant_distributions, file = paste0(current_path, '/', chem.cas, '/', 
 #                                     Cplasma_max_ap = sum(Cplasma_max.a > Cplasma_max.p),
 #                                     Cplasma_max_pc = sum(Cplasma_max.p > Cplasma_max.c),
 #                                     AUC_pc = sum(AUC.p > AUC.c)), by = .(casn)][, .(casn, Cplasma_max_ratio_ap, AUC_ratio_ap)][order(Cplasma_max_ratio_ap),]
+
+# merge.data.table(normal_table, normal_weight_css_table,
+#                  by.x = c('individual.a', 'Age.a', 'casn'),
+#                  by.y = c('individual', 'Age', 'casn'))[, .(Ratio_cplasma_max_ap = mean(Cplasma_max.a/Cplasma_max.p),
+#                                                             Ratio_AUC_ap = mean(AUC.a/AUC.p), css_day = mean(the.day)),
+#                                                         by = .(casn)]
+
