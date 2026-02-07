@@ -1,4 +1,4 @@
-Package: GeoTox
+Package: GeoToxTimeDependent
 Title: Spatiotemporal Mixture Risk Assessment
 Version: 0.2.0.9001
 Authors@R: c(
@@ -18,7 +18,7 @@ Description: Connecting spatiotemporal exposure to individual and
 License: MIT + file LICENSE
 URL: https://niehs.github.io/GeoTox/, https://github.com/NIEHS/GeoTox
 Depends: 
-    R (>= 4.4.0)
+    R (>= 4.3.0)
 Imports: 
     cli,
     ctxR,
