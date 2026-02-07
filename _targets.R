@@ -1,0 +1,231 @@
+# Created by use_targets().
+# Follow the comments below to fill in this target script.
+# Then follow the manual to check and run the pipeline:
+#   https://books.ropensci.org/targets/walkthrough.html#inspect-the-pipeline
+
+# Load packages required to define the pipeline:
+library(targets)
+library(crew)
+library(mirai)
+library(nanonext)
+library(crew.cluster)
+library(GeoToxTimeDependent)
+library(httk)
+library(data.table)
+library(ggplot2)
+# library(tarchetypes) # Load other packages as needed.
+
+
+controller_local <- crew::crew_controller_local(
+  name = "controller_local",
+  options_local = crew::crew_options_local(
+    log_directory = "slurm/",
+    log_join = FALSE
+  ),
+  workers = 2
+)
+
+controller_01 <- crew.cluster::crew_controller_slurm(
+  name = "controller_01",
+  workers = 50,
+  # This controlls the number of workers that can be used simultaneously
+  options_cluster = crew.cluster::crew_options_slurm(
+    verbose = TRUE,
+    memory_gigabytes_required = 8,
+    log_output = "slurm/slurm-crew-%j.out",
+    log_error = "slurm/slurm-crew-%j.err",
+    script_lines = c(
+      "#SBATCH --job-name=dispatch"
+    ),
+    #partition = "geo"
+    partition =  "normal"
+    #partition = "highmem"
+  ),
+  tasks_max = Inf
+)
+
+
+#Set target options:
+tar_option_set(
+  packages = c('GeoToxTimeDependent', 'httk', 'data.table', 'ggplot2'),
+  imports = c('GeoToxTimeDependent'),
+  controller = crew_controller_group(controller_local, controller_01),
+  resources = tar_resources(
+    crew = tar_resources_crew(controller = "controller_local")
+  )
+)
+
+# Run the R scripts in the R/ folder with your custom functions:
+tar_source(files = 'inst/SOT simulations.R')
+# tar_source("other_functions.R") # Source other scripts as needed.
+
+# Replace the target list below with your own:
+list(
+  tar_target(
+    name = chemicals,
+    command = c('51-28-5', '51-79-6', '79-44-7', '133-90-4', '584-84-9'),
+    iteration = 'list'
+    )
+    # format = "qs" # Efficient storage for general data objects.
+  ,
+  tar_target(
+    name = number_people,
+    command = c(16),
+    iteration = 'list'
+    )
+    ,
+    tar_target(
+    name = age_limits,
+    list(c(20,29), c(30, 39), c(40,49)),
+    iteration = 'list'
+    ),
+    tar_target(
+    name = population,
+    command = {GeoToxTimeDependent::load_httk_data()
+      pop_simulator(chem.cas = chemicals, samples = number_people)
+      },
+    pattern = cross(chemicals, number_people),
+    iteration = 'list',
+     resources = targets::tar_resources(
+       crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+    # tar_target(
+    # name = population_pairs,
+    # command = c(chemicals, number_people),
+    # pattern = cross(chemicals, number_people),
+    #  iteration = 'list'#,
+    # # resources = targets::tar_resources(
+    # #   crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+    # # )
+    #  ),
+     tar_target(
+    name = simulate_params,
+    command = {load_httk_data()
+      simulate_parameters(chem.cas = chemicals, mcs = population)
+    },
+    pattern = map(chemicals, population),
+    iteration = 'list',
+    resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+    )
+     ),
+     tar_target(
+      acute_exp, 
+      command = acute_exposure_matrix,
+      iteration = 'list'
+     ),
+      tar_target(
+      periodic_exp, 
+      command = periodic_exposure_matrix,
+      iteration = 'list'
+     ),
+      tar_target(
+      constant_exp, 
+      command = constant_exposure_matrix,
+      iteration = 'list'
+     ),
+     tar_target(
+      acute_scenario,
+      command = acute_exposure(chem.cas = chemicals,
+                               sim_parms = simulate_params,
+                               acute_matrix = acute_exp),
+      pattern = map(chemicals, simulate_params),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      periodic_scenario,
+      command = periodic_exposure(chem.cas = chemicals,
+                                  sim_parms = simulate_params,
+                                  periodic_matrix = periodic_exp),
+      pattern = map(chemicals, simulate_params),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      constant_scenario,
+      command = constant_exposure(chem.cas = chemicals,
+                                  sim_parms = simulate_params,
+                                  constant_matrix = constant_exp),
+      pattern = map(chemicals, simulate_params),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      acute_distribution,
+      command = httk_distributions(exposure_sims = acute_scenario, 
+                                   exposure_params = simulate_params, 
+                                   Scenario = 'Acute', 
+                                   num_people = number_people),
+      pattern = cross(map(acute_scenario, simulate_params), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      periodic_distribution,
+      command = httk_distributions(exposure_sims = periodic_scenario, 
+                                   exposure_params = simulate_params, 
+                                   Scenario = 'Periodic', 
+                                   num_people = number_people),
+      pattern = cross(map(periodic_scenario, simulate_params), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      constant_distribution,
+      command = httk_distributions(exposure_sims = constant_scenario, 
+                                   exposure_params = simulate_params, 
+                                   Scenario = 'Constant', 
+                                   num_people = number_people),
+      pattern = cross(map(constant_scenario, simulate_params), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      k_off,
+      command = -10:1#,
+      # iteration = 'list'
+     ),
+     tar_target(
+      k_on,
+      command = 2:8#,
+      # iteration = 'list'
+     ),
+     tar_target(
+      log_AC50,
+      command = (-6:4)/2#,
+      # iteration = 'list'
+     ),
+     tar_target(
+      log_kinetics,
+      command = {log_kinetics <- expand.grid('k_off' = k_off,
+                                             'k_on' = k_on,
+                                             'logAC50' = log_AC50)
+                 log_kinetics$KD <- log_kinetics$k_off - log_kinetics$k_on
+                 asplit(log_kinetics, 1)
+                 #sapply(dim(log_kinetics)[[1]], function(i) {log_kinetics[i,]})
+                 },
+      iteration = 'list'#,
+    #   resources = targets::tar_resources(
+    #   crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+    #  )
+     )
+    )#,
+#  tar_target(
+#    name = model,
+#    command = coefficients(lm(y ~ x, data = data))
+#  )
+
