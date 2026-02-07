@@ -25,3 +25,8 @@ inst/Simulated-exposure-scenarios\.Rmd$
 inst/Figure_generation.R
 inst/SOT simulations.R
 inst/SOT_simulations
+inst/sim_test\.R
+\\.sh
+_targets\.R
+slurm
+_targets

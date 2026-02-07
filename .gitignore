@@ -53,6 +53,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# Targets
+_targets/
+
 # pkgdown site
 docs/
 
@@ -75,3 +78,5 @@ docs
 data/geo_tox_data_manuscript.RData
 
 README.html
+
+slurm/
