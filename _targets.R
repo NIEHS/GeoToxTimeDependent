@@ -70,7 +70,7 @@ list(
   ,
   tar_target(
     name = number_people,
-    command = c(16),
+    command = c(500),
     iteration = 'list'
     )
     ,
@@ -198,9 +198,13 @@ list(
       normal_distribution,
       command = {
         casn <- chemicals
-        merge.data.table(merge.data.table(acute_distribution$normal$normal_httk[, index := paste(individual, Age)],
+        dt <- merge.data.table(merge.data.table(acute_distribution$normal$normal_httk[, index := paste(individual, Age)],
                                           constant_distribution$normal$normal_httk[, index := paste(individual, Age)], by = 'index', suffixes = c('.a', '.c')),
                                           periodic_distribution$normal$normal_httk[, index := paste(individual, Age)], by = 'index')[, casn := casn]
+      setnames(dt, old = c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'),
+          new = paste0(c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'), '.p'))
+      
+      dt
       },
       pattern = map(map(map(acute_distribution, constant_distribution),periodic_distribution), chemicals),
       iteration = 'list'
@@ -209,9 +213,13 @@ list(
       obese_distribution,
       command = {
         casn <- chemicals
-        merge.data.table(merge.data.table(acute_distribution$obese$obese_httk[, index := paste(individual, Age)],
+        dt <- merge.data.table(merge.data.table(acute_distribution$obese$obese_httk[, index := paste(individual, Age)],
                                           constant_distribution$obese$obese_httk[, index := paste(individual, Age)], by = 'index', suffixes = c('.a', '.c')),
                                           periodic_distribution$obese$obese_httk[, index := paste(individual, Age)], by = 'index')[, casn := casn]
+      setnames(dt, old = c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'),
+          new = paste0(c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'), '.p'))
+      
+      dt
       },
       pattern = map(map(map(acute_distribution, constant_distribution),periodic_distribution), chemicals),
       iteration = 'list'
@@ -221,13 +229,13 @@ list(
       command = {
         dt <- rbindlist(normal_distribution)
         aggregate_person <- number_people + 1
-        dt[individual != aggregate_person, .(Cplasma_max_ratio_ap = mean(Cplasma_max.a/Cplasma_max),
+        dt[individual.a != aggregate_person, .(Cplasma_max_ratio_ap = mean(Cplasma_max.a/Cplasma_max.p),
                                               Cplasma_max_ratio_ac = mean(Cplasma_max.a/Cplasma_max.c),
-                                              AUC_ratio_ap = mean(AUC.a/AUC), 
+                                              AUC_ratio_ap = mean(AUC.a/AUC.p), 
                                               AUC_ratio_ac = mean(AUC.a/AUC.c),
-                                              Cplasma_max_ap = sum(Cplasma_max.a > Cplasma_max), 
-                                              Cplasma_max_pc = sum(Cplasma_max > Cplasma_max.c), 
-                                              AUC_pc = sum(AUC > AUC.c)), by = .(casn, Age)]
+                                              Cplasma_max_ap = sum(Cplasma_max.a > Cplasma_max.p), 
+                                              Cplasma_max_pc = sum(Cplasma_max.p > Cplasma_max.c), 
+                                              AUC_pc = sum(AUC.p > AUC.c)), by = .(casn, Age.a)]
       }
      ),
      tar_target(
@@ -235,13 +243,13 @@ list(
       command = {
         dt <- rbindlist(obese_distribution)
         aggregate_person <- number_people + 1
-        dt[individual != aggregate_person, .(Cplasma_max_ratio_ap = mean(Cplasma_max.a/Cplasma_max),
+        dt[individual.a != aggregate_person, .(Cplasma_max_ratio_ap = mean(Cplasma_max.a/Cplasma_max.p),
                                               Cplasma_max_ratio_ac = mean(Cplasma_max.a/Cplasma_max.c),
-                                              AUC_ratio_ap = mean(AUC.a/AUC), 
+                                              AUC_ratio_ap = mean(AUC.a/AUC.p), 
                                               AUC_ratio_ac = mean(AUC.a/AUC.c),
-                                              Cplasma_max_ap = sum(Cplasma_max.a > Cplasma_max), 
-                                              Cplasma_max_pc = sum(Cplasma_max > Cplasma_max.c), 
-                                              AUC_pc = sum(AUC > AUC.c)), by = .(casn, Age)]
+                                              Cplasma_max_ap = sum(Cplasma_max.a > Cplasma_max.p), 
+                                              Cplasma_max_pc = sum(Cplasma_max.p > Cplasma_max.c), 
+                                              AUC_pc = sum(AUC.p > AUC.c)), by = .(casn, Age.a)]
       }
      ),
      tar_target(
@@ -285,6 +293,34 @@ list(
       resources = targets::tar_resources(
       crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
      )
+     ),
+     tar_target(
+      normal_plasma_steady_state_analysis,
+      command = {
+        normal_table <- rbindlist(normal_distribution)
+        normal_weight_css_table <- rbindlist(normal_steady_state)
+        merge.data.table(normal_table, normal_weight_css_table,
+                 by.x = c('individual.a', 'Age.a', 'casn'),
+                 by.y = c('individual', 'Age', 'casn'))[, .(Ratio_cplasma_max_ap = mean(Cplasma_max.a/Cplasma_max.p),
+                                                            Ratio_cplasma_max_ac = mean(Cplasma_max.a/Cplasma_max.c),
+                                                            Ratio_AUC_ap = mean(AUC.a/AUC.p), Ratio_AUC_ac = mean(AUC.a/AUC.c),
+                                                            css_day = mean(the.day)),
+                                                        by = .(casn)]
+      }
+     ),
+     tar_target(
+      obese_plasma_steady_state_analysis,
+      command = {
+        obese_table <- rbindlist(obese_distribution)
+        obese_weight_css_table <- rbindlist(obese_steady_state)
+        merge.data.table(obese_table, obese_weight_css_table,
+                 by.x = c('individual.a', 'Age.a', 'casn'),
+                 by.y = c('individual', 'Age', 'casn'))[, .(Ratio_cplasma_max_ap = mean(Cplasma_max.a/Cplasma_max.p), 
+                                                            Ratio_cplasma_max_ac = mean(Cplasma_max.a/Cplasma_max.c),
+                                                            Ratio_AUC_ap = mean(AUC.a/AUC.p), Ratio_AUC_ac = mean(AUC.a/AUC.c),
+                                                            css_day = mean(the.day)),
+                                                        by = .(casn)]
+      }
      ),
     #  tar_target(
     #   name = test_parameters,
