@@ -3,12 +3,14 @@ library(httk)
 library(dplyr)
 library(tidyr)
 library(data.table)
-#library(GeoTox)
-library(gganimate)
-library(gifski)
+#library(GeoToxTimeDependent)
+#library(gganimate)
+#library(gifski)
 library(ggridges)
 library(cowplot)
-devtools::load_all()
+#devtools::load_all()
+
+#load_httk_data()
 
 # Generate exposure scenarios. Same three across all chemicals, populations
 time <- seq(from = 0, to = 30, by = 1/24)
@@ -432,6 +434,49 @@ saveRDS(acute_distributions, file = paste0(current_path, '/', chem.cas, '/', 'ac
 saveRDS(periodic_distributions, file = paste0(current_path, '/', chem.cas, '/', 'periodic_distribution.RDS'))
 saveRDS(constant_distributions, file = paste0(current_path, '/', chem.cas, '/', 'constant_distribution.RDS'))
 #print(paste0(getwd(), '/inst/SOT_simulations'))
+}
+
+httk_normal_steady_state <- function(n_people,
+                                    n_cohorts,
+                                    chemical,
+                                    parameters){
+       httk_steady_state_simulation(n_people = n_people,
+                                   n_cohorts = n_cohorts,
+                                   chemical = chemical,
+                                   parameters = parameters$normal,
+                                   weight = 'Normal')    
+                                    }
+
+
+
+httk_steady_state_simulation <- function(n_people,
+                                    n_cohorts,
+                                    chemical,
+                                    parameters,
+                                    weight
+                                    ){
+       print(n_people)
+       print(n_cohorts)
+       num_cohorts <- length(n_cohorts)
+       people_cohorts = n_people*num_cohorts
+       df <- data.frame(avg = numeric(people_cohorts),
+                                        frac = numeric(people_cohorts), 
+                                        max = numeric(people_cohorts), 
+                                        the.day = numeric(people_cohorts), 
+                                        Age = numeric(people_cohorts), 
+                                        individual = numeric(people_cohorts))
+       cohort_min <- unlist(lapply(n_cohorts, min))
+       print(cohort_min)
+for (i in 1:n_people){
+  for (j in 1:num_cohorts) {
+       df[i + (j-1)*n_people,] <- cbind(as.data.frame(httk::calc_css(chem.cas = chemical, 
+                                                                     parameters = parameters[[j]][i,])), Age = cohort_min[j])
+}
+  }
+df$casn <- chemical
+df$weight <- weight
+df$individual <- rep(1:n_people, num_cohorts)
+return(df)
 }
 
 # To merge tables, follow the procedure below for both the 'normal' and 'obese' weight classifications.

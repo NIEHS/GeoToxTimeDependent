@@ -63,20 +63,27 @@ tar_source(files = 'inst/SOT simulations.R')
 list(
   tar_target(
     name = chemicals,
-    command = c('51-28-5', '51-79-6', '79-44-7', '133-90-4', '584-84-9'),
+    command = c('51-28-5', '51-79-6', '53-96-3', '56-38-2', '60-11-7', 
+                '63-25-2', '64-67-5', '72-43-5', '77-78-1', '79-44-7', 
+                '84-74-2', '87-86-5', '88-06-2', '91-22-5', '92-87-5', 
+                '94-75-7', '95-80-7', '95-95-4', '96-09-3', '98-86-2', 
+                '101-14-4', '101-77-9', '106-50-3', '107-21-1', '111-44-4', 
+                '114-26-1', '117-81-7', '119-90-4', '120-80-9', '121-14-2', 
+                '121-69-7', '123-31-9', '131-11-3', '133-90-4', '510-15-6', 
+                '532-27-4', '534-52-1', '584-84-9', '822-06-0'),
     iteration = 'list'
     )
     # format = "qs" # Efficient storage for general data objects.
   ,
   tar_target(
     name = number_people,
-    command = c(16),
+    command = c(500),
     iteration = 'list'
     )
     ,
     tar_target(
     name = age_limits,
-    list(c(20,29), c(30, 39), c(40,49)),
+    list(c(20,29), c(30, 39), c(40,49), c(50, 59), c(60, 69), c(70, 79)),
     iteration = 'list'
     ),
     tar_target(
@@ -194,6 +201,150 @@ list(
       crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
      )
      ),
+     tar_target(
+      normal_distribution,
+      command = {
+        casn <- chemicals
+        dt <- merge.data.table(merge.data.table(acute_distribution$normal$normal_httk[, index := paste(individual, Age)],
+                                          constant_distribution$normal$normal_httk[, index := paste(individual, Age)], by = 'index', suffixes = c('.a', '.c')),
+                                          periodic_distribution$normal$normal_httk[, index := paste(individual, Age)], by = 'index')[, casn := casn]
+      setnames(dt, old = c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'),
+          new = paste0(c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'), '.p'))
+      
+      dt
+      },
+      pattern = map(map(map(acute_distribution, constant_distribution),periodic_distribution), chemicals),
+      iteration = 'list'
+     ),
+     tar_target(
+      obese_distribution,
+      command = {
+        casn <- chemicals
+        dt <- merge.data.table(merge.data.table(acute_distribution$obese$obese_httk[, index := paste(individual, Age)],
+                                          constant_distribution$obese$obese_httk[, index := paste(individual, Age)], by = 'index', suffixes = c('.a', '.c')),
+                                          periodic_distribution$obese$obese_httk[, index := paste(individual, Age)], by = 'index')[, casn := casn]
+      setnames(dt, old = c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'),
+          new = paste0(c('individual', 'Cplasma_max', 'AUC', 'BW', 'Age', 'Scenario', 'Weight'), '.p'))
+      
+      dt
+      },
+      pattern = map(map(map(acute_distribution, constant_distribution),periodic_distribution), chemicals),
+      iteration = 'list'
+     ),
+     tar_target(
+      name = normal_dist_processed,
+      command = {
+        dt <- rbindlist(normal_distribution)
+        aggregate_person <- number_people + 1
+        dt[individual.a != aggregate_person, .(Cplasma_max_ratio_ap = mean(Cplasma_max.a/Cplasma_max.p),
+                                              Cplasma_max_ratio_ac = mean(Cplasma_max.a/Cplasma_max.c),
+                                              AUC_ratio_ap = mean(AUC.a/AUC.p), 
+                                              AUC_ratio_ac = mean(AUC.a/AUC.c),
+                                              Cplasma_max_ap = sum(Cplasma_max.a > Cplasma_max.p), 
+                                              Cplasma_max_pc = sum(Cplasma_max.p > Cplasma_max.c), 
+                                              AUC_pc = sum(AUC.p > AUC.c)), by = .(casn, Age.a)]
+      }
+     ),
+     tar_target(
+      name = obese_dist_processed,
+      command = {
+        dt <- rbindlist(obese_distribution)
+        aggregate_person <- number_people + 1
+        dt[individual.a != aggregate_person, .(Cplasma_max_ratio_ap = mean(Cplasma_max.a/Cplasma_max.p),
+                                              Cplasma_max_ratio_ac = mean(Cplasma_max.a/Cplasma_max.c),
+                                              AUC_ratio_ap = mean(AUC.a/AUC.p), 
+                                              AUC_ratio_ac = mean(AUC.a/AUC.c),
+                                              Cplasma_max_ap = sum(Cplasma_max.a > Cplasma_max.p), 
+                                              Cplasma_max_pc = sum(Cplasma_max.p > Cplasma_max.c), 
+                                              AUC_pc = sum(AUC.p > AUC.c)), by = .(casn, Age.a)]
+      }
+     ),
+     tar_target(
+      name = normal_steady_state,
+      command = {
+        parameters <- simulate_params
+        normal_parameters <- parameters$normal
+        #ages <- as.vector(age_limits)
+        print(age_limits)
+        print(chemicals)
+        load_httk_data()
+        httk_steady_state_simulation(n_people = number_people,
+                                     n_cohorts = age_limits,
+                                     chemical = chemicals,
+                                     parameters = normal_parameters,
+                                     weight = 'normal')
+      },
+      iteration = 'list',
+      pattern = map(chemicals, simulate_params),
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      name = obese_steady_state,
+      command = {
+        parameters <- simulate_params
+        obese_parameters <- parameters$obese
+        #ages <- as.vector(age_limits)
+        print(age_limits)
+        print(chemicals)
+        load_httk_data()
+        httk_steady_state_simulation(n_people = number_people,
+                                     n_cohorts = age_limits,
+                                     chemical = chemicals,
+                                     parameters = obese_parameters,
+                                     weight = 'obese')
+      },
+      iteration = 'list',
+      pattern = map(chemicals, simulate_params),
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      normal_plasma_steady_state_analysis,
+      command = {
+        normal_table <- rbindlist(normal_distribution)
+        normal_weight_css_table <- rbindlist(normal_steady_state)
+        merge.data.table(normal_table, normal_weight_css_table,
+                 by.x = c('individual.a', 'Age.a', 'casn'),
+                 by.y = c('individual', 'Age', 'casn'))[, .(Ratio_cplasma_max_ap = mean(Cplasma_max.a/Cplasma_max.p),
+                                                            Ratio_cplasma_max_ac = mean(Cplasma_max.a/Cplasma_max.c),
+                                                            Ratio_AUC_ap = mean(AUC.a/AUC.p), Ratio_AUC_ac = mean(AUC.a/AUC.c),
+                                                            css_day = mean(the.day)),
+                                                        by = .(casn)]
+      }
+     ),
+     tar_target(
+      obese_plasma_steady_state_analysis,
+      command = {
+        obese_table <- rbindlist(obese_distribution)
+        obese_weight_css_table <- rbindlist(obese_steady_state)
+        merge.data.table(obese_table, obese_weight_css_table,
+                 by.x = c('individual.a', 'Age.a', 'casn'),
+                 by.y = c('individual', 'Age', 'casn'))[, .(Ratio_cplasma_max_ap = mean(Cplasma_max.a/Cplasma_max.p), 
+                                                            Ratio_cplasma_max_ac = mean(Cplasma_max.a/Cplasma_max.c),
+                                                            Ratio_AUC_ap = mean(AUC.a/AUC.p), Ratio_AUC_ac = mean(AUC.a/AUC.c),
+                                                            css_day = mean(the.day)),
+                                                        by = .(casn)]
+      }
+     ),
+    #  tar_target(
+    #   name = test_parameters,
+    #   command = {
+    #     #parameters <- simulate_params
+    #     #print(chemicals)
+    #     #normal_parameters <- parameters$normal
+    #     #list('cohorts' = age_limits, 'par' = normal_parameters, 'chem' = chemicals)
+    #     age_limits
+
+    #   },
+    #   iteration = 'list',
+    #    pattern = map(chemicals, simulate_params),
+    #   resources = targets::tar_resources(
+    #   crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+    #  )
+    #  ),
      tar_target(
       k_off,
       command = -10:1#,
