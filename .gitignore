@@ -68,6 +68,9 @@ rsconnect/
 inst/doc
 docs
 
+# inst docs
+inst/*.pdf
+
 #data-raw/
 
 ._*
