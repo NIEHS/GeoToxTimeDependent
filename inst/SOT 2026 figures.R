@@ -241,3 +241,47 @@ row_584_84_9 <- cowplot::plot_grid(acute_584_84_9_plot, periodic_584_84_9_plot, 
 #        plot = row_117_81_7, device = 'png', width = 2560, height = 1370, units = 'px')
 # ggsave('./inst/SOT2026_exposure_normal_20s_plot_grayscale_percentiles_584_84_9.png',
 #        plot = row_584_84_9, device = 'png', width = 2560, height = 1370, units = 'px')
+
+
+# Dose-response parameter sweep plots
+acute_79_44_7_dr <- cowplot::plot_grid(ggplot(response_decay_exponential(plasma_data = acute_exposure_79_44_7$normal$acute_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-10, k_on = 10^-1),
+                                              aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-10, '*k['+']*'=1E-1'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                       ggplot(response_decay_exponential(plasma_data = acute_exposure_79_44_7$normal$acute_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-9, k_on = 10^0),
+                                              aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-9, '*k['+']*'=1E0'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                       ggplot(response_decay_exponential(plasma_data = acute_exposure_79_44_7$normal$acute_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-8, k_on = 10^1),
+                                              aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-8, '*k['+']*'=1E1'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                       ggplot(response_decay_exponential(plasma_data = acute_exposure_79_44_7$normal$acute_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-7, k_on = 10^2),
+                                              aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-7, '*k['+']*'=1E2'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                       ggplot(response_decay_exponential(plasma_data = acute_exposure_79_44_7$normal$acute_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-6, k_on = 10^3),
+                                              aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-6, '*k['+']*'=1E3'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                       ggplot(response_decay_exponential(plasma_data = acute_exposure_79_44_7$normal$acute_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-5, k_on = 10^4),
+                                              aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-5, '*k['+']*'=1E4'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                       nrow = 1, align = 'v')
+
+periodic_79_44_7_dr <- cowplot::plot_grid(ggplot(response_decay_exponential(plasma_data = periodic_exposure_79_44_7$normal$periodic_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-10, k_on = 10^-1),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-10, '*k['+']*'=1E-1'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = periodic_exposure_79_44_7$normal$periodic_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-9, k_on = 10^0),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-9, '*k['+']*'=1E0'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = periodic_exposure_79_44_7$normal$periodic_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-8, k_on = 10^1),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-8, '*k['+']*'=1E1'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = periodic_exposure_79_44_7$normal$periodic_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-7, k_on = 10^2),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-7, '*k['+']*'=1E2'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = periodic_exposure_79_44_7$normal$periodic_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-6, k_on = 10^3),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-6, '*k['+']*'=1E3'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = periodic_exposure_79_44_7$normal$periodic_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-5, k_on = 10^4),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-5, '*k['+']*'=1E4'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          nrow = 1, align = 'v')
+
+constant_79_44_7_dr <- cowplot::plot_grid(ggplot(response_decay_exponential(plasma_data = constant_exposure_79_44_7$normal$constant_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-10, k_on = 10^-1),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-10, '*k['+']*'=1E-1'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = constant_exposure_79_44_7$normal$constant_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-9, k_on = 10^0),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-9, '*k['+']*'=1E0'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = constant_exposure_79_44_7$normal$constant_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-8, k_on = 10^1),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-8, '*k['+']*'=1E1'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = constant_exposure_79_44_7$normal$constant_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-7, k_on = 10^2),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-7, '*k['+']*'=1E2'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = constant_exposure_79_44_7$normal$constant_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-6, k_on = 10^3),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-6, '*k['+']*'=1E3'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          ggplot(response_decay_exponential(plasma_data = constant_exposure_79_44_7$normal$constant_norm_20$numeric$`Average Person`, max = 100, AC50 = 5, n = 1, k_off = 10^-5, k_on = 10^4),
+                                                 aes(time, response)) + geom_line() +ylim(0, 38) + labs(title = expression(k['-']*'= 1E-5, '*k['+']*'=1E4'), x = 'Time (d)', y = 'Response')+ theme(text = element_text(size = 14)),
+                                          nrow = 1, align = 'v')
