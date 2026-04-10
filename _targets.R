@@ -15,6 +15,7 @@ library(data.table)
 library(ggplot2)
 # library(tarchetypes) # Load other packages as needed.
 
+load_httk_data()
 
 controller_local <- crew::crew_controller_local(
   name = "controller_local",
@@ -22,7 +23,7 @@ controller_local <- crew::crew_controller_local(
     log_directory = "slurm/",
     log_join = FALSE
   ),
-  workers = 2
+  workers = 1
 )
 
 controller_01 <- crew.cluster::crew_controller_slurm(
@@ -31,15 +32,37 @@ controller_01 <- crew.cluster::crew_controller_slurm(
   # This controlls the number of workers that can be used simultaneously
   options_cluster = crew.cluster::crew_options_slurm(
     verbose = TRUE,
-    memory_gigabytes_required = 8,
+    memory_gigabytes_required = 16,
     log_output = "slurm/slurm-crew-%j.out",
     log_error = "slurm/slurm-crew-%j.err",
     script_lines = c(
       "#SBATCH --job-name=dispatch"
     ),
     #partition = "geo"
-    partition =  "normal"
-    #partition = "highmem"
+    #partition =  "normal"
+    partition = "highmem"
+  ),
+  tasks_max = Inf
+)
+
+controller_02 <- crew.cluster::crew_controller_slurm(
+  name = "controller_02",
+  workers = 50,
+  # This controlls the number of workers that can be used simultaneously
+  options_cluster = crew.cluster::crew_options_slurm(
+    verbose = TRUE,
+    memory_gigabytes_per_cpu = 2,
+    cpus_per_task = 32,
+    log_output = "slurm/slurm-crew-%j.out",
+    log_error = "slurm/slurm-crew-%j.err",
+    script_lines = c(
+      "#SBATCH --job-name=threading",
+      "#SBATCH --hint=multithread",
+      "export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK"
+    ),
+    #partition = "geo"
+    #partition =  "normal"
+    partition = "highmem"
   ),
   tasks_max = Inf
 )
@@ -49,10 +72,13 @@ controller_01 <- crew.cluster::crew_controller_slurm(
 tar_option_set(
   packages = c('GeoToxTimeDependent', 'httk', 'data.table', 'ggplot2'),
   imports = c('GeoToxTimeDependent'),
-  controller = crew_controller_group(controller_local, controller_01),
+  controller = crew_controller_group(controller_local, controller_01, controller_02),
   resources = tar_resources(
     crew = tar_resources_crew(controller = "controller_local")
-  )
+  ),
+  format = 'qs',
+  storage = "worker", 
+  retrieval = "worker"
 )
 
 # Run the R scripts in the R/ folder with your custom functions:
@@ -109,6 +135,17 @@ list(
      tar_target(
     name = simulate_params,
     command = {load_httk_data()
+      simulate_parameters(chem.cas = chemicals, mcs = population)
+    },
+    pattern = map(chemicals, population),
+    iteration = 'list',
+    resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+    )
+     ),
+     tar_target(
+    name = simulate_params_test,
+    command = {#load_httk_data()
       simulate_parameters(chem.cas = chemicals, mcs = population)
     },
     pattern = map(chemicals, population),
@@ -202,6 +239,57 @@ list(
      )
      ),
      tar_target(
+      analytic_css_acute,
+      command = {
+        # Take total exposure over thirty days
+        total_intake <- sum(acute_exp[, 2])
+        css_analytic <- analytic_css(population_parameters = simulate_params, 
+                                                chemical = chemicals,
+                                               # model = 'pbtk',
+                                                dose = total_intake)
+        css_analytic
+      },
+      pattern = map(chemicals, simulate_params),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      analytic_css_periodic,
+      command = {
+        # Take total exposure over thirty days
+        total_intake <- sum(periodic_exp[, 2])
+        css_analytic <- analytic_css(population_parameters = simulate_params, 
+                                                chemical = chemicals,
+                                               # model = 'pbtk',
+                                                dose = total_intake)
+        css_analytic
+      },
+      pattern = map(chemicals, simulate_params),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      analytic_css_constant,
+      command = {
+        # Take total exposure over thirty days
+        total_intake <- sum(constant_exp[, 2])
+        css_analytic <- analytic_css(population_parameters = simulate_params, 
+                                                chemical = chemicals,
+                                               # model = 'pbtk',
+                                                dose = total_intake)
+        css_analytic
+      },
+      pattern = map(chemicals, simulate_params),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
       normal_distribution,
       command = {
         casn <- chemicals
@@ -214,7 +302,10 @@ list(
       dt
       },
       pattern = map(map(map(acute_distribution, constant_distribution),periodic_distribution), chemicals),
-      iteration = 'list'
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
      ),
      tar_target(
       obese_distribution,
@@ -229,7 +320,10 @@ list(
       dt
       },
       pattern = map(map(map(acute_distribution, constant_distribution),periodic_distribution), chemicals),
-      iteration = 'list'
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
      ),
      tar_target(
       name = normal_dist_processed,
@@ -277,7 +371,28 @@ list(
       iteration = 'list',
       pattern = map(chemicals, simulate_params),
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+      crew = targets::tar_resources_crew(controller = "controller_02") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      name = normal_steady_state_test,
+      command = {
+        parameters <- simulate_params
+        normal_parameters <- parameters$normal
+        #ages <- as.vector(age_limits)
+        print(age_limits)
+        print(chemicals)
+        #load_httk_data()
+        httk_steady_state_simulation(n_people = number_people,
+                                     n_cohorts = age_limits,
+                                     chemical = chemicals,
+                                     parameters = normal_parameters,
+                                     weight = 'normal')
+      },
+      iteration = 'list',
+      pattern = map(chemicals, simulate_params),
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_02") # Specify the SLURM controller
      )
      ),
      tar_target(
@@ -298,7 +413,7 @@ list(
       iteration = 'list',
       pattern = map(chemicals, simulate_params),
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+      crew = targets::tar_resources_crew(controller = "controller_02") # Specify the SLURM controller
      )
      ),
      tar_target(
@@ -311,6 +426,7 @@ list(
                  by.y = c('individual', 'Age', 'casn'))[, .(Ratio_cplasma_max_ap = mean(Cplasma_max.a/Cplasma_max.p),
                                                             Ratio_cplasma_max_ac = mean(Cplasma_max.a/Cplasma_max.c),
                                                             Ratio_AUC_ap = mean(AUC.a/AUC.p), Ratio_AUC_ac = mean(AUC.a/AUC.c),
+                                                            AUC_a = mean(AUC.a), Cplasma_max_a = mean(Cplasma_max.a),
                                                             css_day = mean(the.day)),
                                                         by = .(casn)]
       }
@@ -325,6 +441,7 @@ list(
                  by.y = c('individual', 'Age', 'casn'))[, .(Ratio_cplasma_max_ap = mean(Cplasma_max.a/Cplasma_max.p), 
                                                             Ratio_cplasma_max_ac = mean(Cplasma_max.a/Cplasma_max.c),
                                                             Ratio_AUC_ap = mean(AUC.a/AUC.p), Ratio_AUC_ac = mean(AUC.a/AUC.c),
+                                                            AUC_a = mean(AUC.a), Cplasma_max_a = mean(Cplasma_max.a),
                                                             css_day = mean(the.day)),
                                                         by = .(casn)]
       }
@@ -347,17 +464,17 @@ list(
     #  ),
      tar_target(
       k_off,
-      command = -10:1#,
+      command = -8:-3#,
       # iteration = 'list'
      ),
      tar_target(
       k_on,
-      command = 2:8#,
+      command = 0:6#,
       # iteration = 'list'
      ),
      tar_target(
       log_AC50,
-      command = (-6:4)/2#,
+      command = -2:2#,
       # iteration = 'list'
      ),
      tar_target(
@@ -373,8 +490,104 @@ list(
     #   resources = targets::tar_resources(
     #   crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
     #  )
+     ),
+  
+  #   tar_target(
+  #    name = dr_chems,
+  #    command = c('120-80-9', '79-44-7', '117-81-7'),
+  #    iteration = 'list'
+  #   ),
+  #   tar_target(
+  #    name = dr_population,
+  #    command = pop_simulator(chem.cas = dr_chems, samples = 10),
+  #    iteration = 'list',
+  #    pattern = map(dr_chems),
+  #    resources = targets::tar_resources(
+  #    crew = targets::tar_resources_crew(controller = "controller_01")
+  #   )
+  #   ),
+  #
+  #   tar_target(
+  #    name = dr_parameter_sweep,
+  #    command = {},
+  #    pattern = cross(log_kinetics, dr_population),
+  #    resources = targets::tar_resources(
+  #    crew = targets::tar_resources_crew(controller = "controller_01")
+  #   )
+  #   ),
+
+    tar_target(
+      acute_dr_sweep,
+      command = {
+        max <- 100
+        AC50_ <- log_kinetics[3]
+        AC50 <- 10^AC50_
+        n <- 1
+        k_off <- 10^log_kinetics[1]
+        k_on <- 10^log_kinetics[2]
+        dose_response_sweep(exposure_sims = acute_scenario,
+                            max = max,
+                            AC50 = AC50,
+                            n = n,
+                            k_off = k_off,
+                            k_on = k_on,
+                            chemical = chemicals)
+      },
+      iteration = 'list',
+      pattern = cross(log_kinetics, map(chemicals, acute_scenario)),
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01")
      )
-    )#,
+    ),
+
+    tar_target(
+      periodic_dr_sweep,
+      command = {
+        max <- 100
+        AC50_ <- log_kinetics[3]
+        AC50 <- 10^AC50_
+        n <- 1
+        k_off <- 10^log_kinetics[1]
+        k_on <- 10^log_kinetics[2]
+        dose_response_sweep(exposure_sims = periodic_scenario,
+                            max = max,
+                            AC50 = AC50,
+                            n = n,
+                            k_off = k_off,
+                            k_on = k_on,
+                            chemical = chemicals)
+      },
+      iteration = 'list',
+      pattern = cross(log_kinetics, map(chemicals, periodic_scenario)),
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01")
+     )
+    ),
+    tar_target(
+      constant_dr_sweep,
+      command = {
+        max <- 100
+        AC50_ <- log_kinetics[3]
+        AC50 <- 10^AC50_
+        n <- 1
+        k_off <- 10^log_kinetics[1]
+        k_on <- 10^log_kinetics[2]
+        dose_response_sweep(exposure_sims = constant_scenario,
+                            max = max,
+                            AC50 = AC50,
+                            n = n,
+                            k_off = k_off,
+                            k_on = k_on,
+                            chemical = chemicals)
+      },
+      iteration = 'list',
+      pattern = cross(log_kinetics, map(chemicals, constant_scenario)),
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01")
+     )
+    )
+ 
+     )#,
 #  tar_target(
 #    name = model,
 #    command = coefficients(lm(y ~ x, data = data))
