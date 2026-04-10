@@ -274,6 +274,84 @@ constant_exposure <- function(chem.cas = '',
                              'constant_obese_70' = constant_obese_70)))
 }
 
+# Calc_ss for populations and exposures
+analytic_css <- function(dose,
+                        population_parameters,
+                        chemical){
+                            print('20 norm start')
+       norm_20 <- sapply(1:dim(population_parameters$normal$norm_20_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_20_param[t,],
+                                                                             chem.cas = chemical,
+                                                                             dose = dose,
+                                                                             model = 'pbtk')
+                                                                             })
+                                                                             print('20 norm')
+       norm_30 <- sapply(1:dim(population_parameters$normal$norm_30_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_30_param[t,],
+                                                                             chem.cas = chemical,
+                                                                             dose = dose,
+                                                                             model = 'pbtk')})
+       norm_40 <- sapply(1:dim(population_parameters$normal$norm_40_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_40_param[t,],
+                                                                             chem.cas = chemical,
+                                                                             dose = dose,
+                                                                             model = 'pbtk')})
+                                                                             print('40 norm')
+       norm_50 <- sapply(1:dim(population_parameters$normal$norm_50_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_50_param[t,],
+                                                                             chem.cas = chemical,
+                                                                             dose = dose,
+                                                                             model = 'pbtk')})
+       norm_60 <- sapply(1:dim(population_parameters$normal$norm_60_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_60_param[t,],
+                                                                             chem.cas = chemical,
+                                                                             dose = dose,
+                                                                             model = 'pbtk')})
+                                                                             print('60 norm')
+       norm_70 <- sapply(1:dim(population_parameters$normal$norm_70_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_70_param[t,],
+                                                                             chem.cas = chemical,
+                                                                             dose = dose,
+                                                                             model = 'pbtk')})     
+                                                                             print('norm done')
+
+       obese_20 <- sapply(1:dim(population_parameters$obese$obese_20_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_20_param[t,],
+                                                                              chem.cas = chemical,
+                                                                              dose = dose,
+                                                                              model = 'pbtk')})
+       obese_30 <- sapply(1:dim(population_parameters$obese$obese_30_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_30_param[t,],
+                                                                              chem.cas = chemical,
+                                                                              dose = dose,
+                                                                              model = 'pbtk')})
+       obese_40 <- sapply(1:dim(population_parameters$obese$obese_40_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_40_param[t,],
+                                                                              chem.cas = chemical,
+                                                                              dose = dose,
+                                                                              model = 'pbtk')})
+       obese_50 <- sapply(1:dim(population_parameters$obese$obese_50_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_50_param[t,],
+                                                                              chem.cas = chemical,
+                                                                              dose = dose,
+                                                                              model = 'pbtk')})
+       obese_60 <- sapply(1:dim(population_parameters$obese$obese_60_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_60_param[t,],
+                                                                              chem.cas = chemical,
+                                                                              dose = dose,
+                                                                              model = 'pbtk')})
+       obese_70 <- sapply(1:dim(population_parameters$obese$obese_70_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_70_param[t,],
+                                                                              chem.cas = chemical,
+                                                                              dose = dose,
+                                                                              model = 'pbtk')})  
+
+       return(list('normal' = list('norm_20' = norm_20,
+                              'norm_30' = norm_30,
+                              'norm_40' = norm_40,
+                              'norm_50' = norm_50,
+                              'norm_60' = norm_60,
+                              'norm_70' = norm_70),
+              'obese' = list('obese_20' = obese_20,
+                             'obese_30' = obese_30,
+                             'obese_40' = obese_40,
+                             'obese_50' = obese_50,
+                             'obese_60' = obese_60,
+                             'obese_70' = obese_70)
+              )
+              )                                                                                                                                            
+       
+       }
+
+
 # AUC and Cplasma distributions
 
 httk_distributions <- function(exposure_sims = list(),
@@ -478,6 +556,45 @@ df$weight <- weight
 df$individual <- rep(1:n_people, num_cohorts)
 return(df)
 }
+
+dose_response_sweep <- function(exposure_sims,
+                                max,
+                                AC50 = NULL,
+                                logAC50 = NULL,
+                                n,
+                                k_off,
+                                k_on,
+                                chemical){
+       if (is.null(AC50) & is.null(logAC50)){
+              stop('Either AC50 or logAC50 must be non-null!')
+       }
+
+       AC50_ <- ifelse(is.null(AC50), 10^logAC50, AC50)
+
+       normal <- exposure_sims$normal
+       obese <- exposure_sims$obese
+
+
+       normal_response <- lapply(normal, function(t) {lapply(t$numeric, function(j) {
+              response_decay_exponential(plasma_data = j, max = max, AC50 = AC50_,
+                                         n = n, k_off = k_off, k_on = k_on)
+                                         })})
+
+       obese_response <- lapply(obese, function(t) {lapply(t$numeric, function(j) {
+              response_decay_exponential(plasma_data = j, max = max, AC50 = AC50_,
+                                         n = n, k_off = k_off, k_on = k_on)
+                                         })})
+
+       return(list('normal' = normal_response,
+                   'obese' = obese_response,
+                   'max' = max,
+                   'AC50' = AC50_,
+                   'n' = n,
+                   'k_off' = k_off,
+                   'k_on' = k_on,
+                   'chemical' = chemical))
+}
+
 
 # To merge tables, follow the procedure below for both the 'normal' and 'obese' weight classifications.
 # normal_101_14_4 <- merge.data.table(merge.data.table(acute_distribution_101_14_4$normal$normal_httk[, index := paste(individual, Age)], constant_distribution_101_14_4$normal$normal_httk[, index := paste(individual, Age)], by = 'index', suffixes = c('.a', '.c')), periodic_distribution_101_14_4$normal$normal_httk[, index := paste(individual, Age)], by = 'index')[, casn := '101-14-4']
