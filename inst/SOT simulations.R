@@ -596,6 +596,74 @@ dose_response_sweep <- function(exposure_sims,
 }
 
 
+dose_response_distributions <- function(dose_response_sims = list(),
+                               exposure_params = list(),
+                               Scenario = '',
+                               num_people,
+                               plots = FALSE,
+                               chemical,
+                               log_AC50,
+                               log_k_off,
+                               log_k_on){
+
+
+  normal_dr <- dose_response_sims$normal
+  obese_dr <- dose_response_sims$obese
+
+  normal_params <- exposure_params$normal
+  obese_params <- exposure_params$obese
+
+
+  normal_dose_response <- data.table(individual = rep(1:(num_people+1), length(normal_dr)),
+                           response_max = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {max(j$response)})}))),
+                           AUC = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {threshold_exceedance(thresholds = list('0' = 0), response_data = j)$response_sum})}))),
+                           BW = c(unname(unlist(lapply(normal_params, function(t) {c(t$BW, mean(t$BW))})))),
+                           Age = rep(c(10*(1+1:length(normal_dr))), each = (num_people+1)),
+                           Scenario = Scenario,
+                           Weight = 'Normal',
+                           Chemical = chemical,
+                           log_AC50 = log_AC50,
+                           log_k_off = log_k_off,
+                           log_k_on = log_k_on)
+
+  #print(head(normal_httk, 10))
+  if (plots){
+  response_max_normal <- ggplot(normal_dose_response[-c((num_people+1)*1:length(normal_dr)),], aes(x = response_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max response') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+  auc_normal <- ggplot(normal_dose_response[-c((num_people+1)*1:length(normal_params)),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+  }
+
+
+  obese_dose_response <- data.table(individual = rep(1:(num_people+1), length(obese_dr)),
+                           response_max = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {max(j$response)})}))),
+                           AUC = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {threshold_exceedance(thresholds = list('0' = 0), response_data = j)$response_sum})}))),
+                           BW = c(unname(unlist(lapply(obese_params, function(t) {c(t$BW, mean(t$BW))})))),
+                           Age = rep(c(10*(1+1:length(obese_dr))), each = (num_people+1)),
+                           Scenario = Scenario,
+                           Weight = 'Obese',
+                           Chemical = chemical,
+                           log_AC50 = log_AC50,
+                           log_k_off = log_k_off,
+                           log_k_on = log_k_on)
+
+  if (plots){
+  response_max_obese <- ggplot(obese_dose_response[-c((num_people+1)*1:length(obese_dr)),], aes(x = response_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max response') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+  auc_obese <- ggplot(obese_dose_response[-c((num_people+1)*1:length(obese_dr)),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+  }
+  
+  if (plots){
+  return(list('normal' = list('normal_dose_response' = normal_dose_response,
+                       'plots' = list('response_max_normal' = response_max_normal,
+                                      'auc_normal' = auc_normal)),
+       'obese' = list('obese_dose_response' = obese_dose_response,
+                      plots = list('response_max_obese' = response_max_obese,
+                                   'auc_obese' = auc_obese))))
+  }
+  
+  return(list('normal' = list('normal_dose_response' = normal_dose_response),
+       'obese' = list('obese_dose_response' = obese_dose_response)))
+
+}
+
 # To merge tables, follow the procedure below for both the 'normal' and 'obese' weight classifications.
 # normal_101_14_4 <- merge.data.table(merge.data.table(acute_distribution_101_14_4$normal$normal_httk[, index := paste(individual, Age)], constant_distribution_101_14_4$normal$normal_httk[, index := paste(individual, Age)], by = 'index', suffixes = c('.a', '.c')), periodic_distribution_101_14_4$normal$normal_httk[, index := paste(individual, Age)], by = 'index')[, casn := '101-14-4']
 # normal_101_77_9 <- merge.data.table(merge.data.table(acute_distribution_101_77_9$normal$normal_httk[, index := paste(individual, Age)], constant_distribution_101_77_9$normal$normal_httk[, index := paste(individual, Age)], by = 'index', suffixes = c('.a', '.c')), periodic_distribution_101_77_9$normal$normal_httk[, index := paste(individual, Age)], by = 'index')[, casn := '101-77-9']
