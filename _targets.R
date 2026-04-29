@@ -11,6 +11,7 @@ library(nanonext)
 library(crew.cluster)
 library(GeoToxTimeDependent)
 library(httk)
+library(purrr)
 library(data.table)
 library(ggplot2)
 # library(tarchetypes) # Load other packages as needed.
@@ -67,12 +68,31 @@ controller_02 <- crew.cluster::crew_controller_slurm(
   tasks_max = Inf
 )
 
+controller_03 <- crew.cluster::crew_controller_slurm(
+  name = "controller_03",
+  workers = 100,
+  # This controlls the number of workers that can be used simultaneously
+  options_cluster = crew.cluster::crew_options_slurm(
+    verbose = TRUE,
+    memory_gigabytes_required = 16,
+    log_output = "slurm/slurm-crew-%j.out",
+    log_error = "slurm/slurm-crew-%j.err",
+    script_lines = c(
+      "#SBATCH --job-name=dispatch"
+    ),
+    #partition = "geo"
+    #partition =  "normal"
+    partition = "highmem"
+  ),
+  tasks_max = Inf
+)
+
 
 #Set target options:
 tar_option_set(
   packages = c('GeoToxTimeDependent', 'httk', 'data.table', 'ggplot2'),
   imports = c('GeoToxTimeDependent'),
-  controller = crew_controller_group(controller_local, controller_01, controller_02),
+  controller = crew_controller_group(controller_local, controller_01, controller_02, controller_03),
   resources = tar_resources(
     crew = tar_resources_crew(controller = "controller_local")
   ),
@@ -637,6 +657,14 @@ list(
       crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
      )
     ),
+#
+#    tar_target(
+#      acute_dr_behavior,
+#      command = {
+#
+#      },
+#      pattern = cross(map(cross(log_kinetics, map(chemicals, simulate_params)), acute_dr_sweep), number_people),
+#    )
 
     tar_target(
       acute_dr_aggregation,
@@ -648,7 +676,7 @@ list(
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)]))
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
     ),
 
@@ -662,7 +690,7 @@ list(
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)]))
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
     ),
 
@@ -676,7 +704,45 @@ list(
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, AC50, k_off, k_on)]))
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+      }
+    ),
+
+    tar_target(
+      acute_dr_hysteresis,
+      command = hysteresis_detection(dose_response_sims = acute_dr_sweep,
+                                     exposure_sims = acute_scenario,
+                                     exposure_params = simulate_params, 
+                                     Scenario = 'Acute', 
+                                     num_people = number_people,
+                                     chemical = chemicals,
+                                     log_AC50 = log_kinetics[3],
+                                     log_k_off = log_kinetics[1],
+                                     log_k_on = log_kinetics[2]),
+      pattern = cross(map(cross(log_kinetics, map(map(chemicals, simulate_params), acute_scenario)), acute_dr_sweep), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+              crew = targets::tar_resources_crew(controller = "controller_03") # Specify the SLURM controller
+     )
+    ),
+
+    tar_target(
+      acute_dr_hysteresis_aggregation,
+      command = {
+        agg_dr <- rbindlist(lapply(acute_dr_hysteresis, function(t) {rbind(t$normal$normal_hysteresis_stats, t$obese$obese_hysteresis_stats)}))
+        #normal_dr <- acute_dose_response_distribution$normal$normal_dose_response
+        #obese_dr <- acute_dose_response_distribution$obese$obese_dose_response
+
+        #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)], 
+        #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)]))
+        agg_dr[, log_KD := log_k_off - log_k_on]
+        agg_dr[, response_lag := time_max_response - time_max_plasma]
+        agg_dr[, .(time_max_plasma_mean = mean(time_max_plasma), time_max_response_mean = mean(time_max_response), 
+                   response_lag_mean = mean(response_lag), bounded_area_mean = mean(bounded_area), BW_mean = mean(BW),
+                   max_plasma_mean = mean(max_plasma), max_response_mean = mean(max_response),
+                   plasma_at_max_response_mean = mean(plasma_at_max_response),
+                   response_at_max_plasma_mean = mean(response_at_max_plasma)), 
+                   by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
     )
  
