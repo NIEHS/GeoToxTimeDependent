@@ -617,6 +617,8 @@ dose_response_distributions <- function(dose_response_sims = list(),
   normal_dose_response <- data.table(individual = rep(1:(num_people+1), length(normal_dr)),
                            response_max = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {max(j$response)})}))),
                            AUC = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {threshold_exceedance(thresholds = list('0' = 0), response_data = j)$response_sum})}))),
+                           response_ss_ratio = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[, sum(c(diff(time),0)*response_addition)/sum(c(diff(time),0)*response)]})}))),
+                           mean_decay = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[, mean(decay)]})}))),
                            BW = c(unname(unlist(lapply(normal_params, function(t) {c(t$BW, mean(t$BW))})))),
                            Age = rep(c(10*(1+1:length(normal_dr))), each = (num_people+1)),
                            Scenario = Scenario,
@@ -636,6 +638,8 @@ dose_response_distributions <- function(dose_response_sims = list(),
   obese_dose_response <- data.table(individual = rep(1:(num_people+1), length(obese_dr)),
                            response_max = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {max(j$response)})}))),
                            AUC = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {threshold_exceedance(thresholds = list('0' = 0), response_data = j)$response_sum})}))),
+                           response_ss_ratio = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[, sum(c(diff(time),0)*response_addition)/sum(c(diff(time),0)*response)]})}))),
+                           mean_decay = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[, mean(decay)]})}))),
                            BW = c(unname(unlist(lapply(obese_params, function(t) {c(t$BW, mean(t$BW))})))),
                            Age = rep(c(10*(1+1:length(obese_dr))), each = (num_people+1)),
                            Scenario = Scenario,
@@ -661,6 +665,152 @@ dose_response_distributions <- function(dose_response_sims = list(),
   
   return(list('normal' = list('normal_dose_response' = normal_dose_response),
        'obese' = list('obese_dose_response' = obese_dose_response)))
+
+}
+
+
+dose_response_behavior <- function(dose_response_sims = list(),
+                               exposure_params = list(),
+                               Scenario = '',
+                               num_people,
+                               #plots = FALSE,
+                               chemical,
+                               log_AC50,
+                               log_k_off,
+                               log_k_on){
+
+  normal_dr <- dose_response_sims$normal
+  obese_dr <- dose_response_sims$obese
+
+  normal_params <- exposure_params$normal
+  obese_params <- exposure_params$obese     
+
+
+  normal_dr_stats <- data.table(individual = rep(1:(num_people+1), length(normal_dr)),
+                               response_ss_ratio = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[, sum(c(diff(time),0)*response_addition)/sum(c(diff(time),0)*response)]})}))),
+                               mean_decay = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[, mean(decay)]})}))),
+                               BW = c(unname(unlist(lapply(normal_params, function(t) {c(t$BW, mean(t$BW))})))),
+                               Age = rep(c(10*(1+1:length(normal_dr))), each = (num_people+1)),
+                               Scenario = Scenario,
+                               Weight = 'Normal',
+                               Chemical = chemical,
+                               log_AC50 = log_AC50,
+                               log_k_off = log_k_off,
+                               log_k_on = log_k_on)
+
+
+  obese_dr_stats <- data.table(individual = rep(1:(num_people+1), length(obese_dr)),
+                               response_ss_ratio = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[, sum(c(diff(time),0)*response_addition)/sum(c(diff(time),0)*response)]})}))),
+                               mean_decay = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[, mean(decay)]})}))),
+                               BW = c(unname(unlist(lapply(obese_params, function(t) {c(t$BW, mean(t$BW))})))),
+                               Age = rep(c(10*(1+1:length(obese_dr))), each = (num_people+1)),
+                               Scenario = Scenario,
+                               Weight = 'Obese',
+                               Chemical = chemical,
+                               log_AC50 = log_AC50,
+                               log_k_off = log_k_off,
+                               log_k_on = log_k_on)
+
+    return(list('normal' = list('normal_dr_stats' = normal_dr_stats),
+       'obese' = list('obese_dr_stats' = obese_dr_stats)))                            
+}
+
+hysteresis_detection <- function(dose_response_sims = list(),
+                               exposure_sims = list(),
+                               exposure_params = list(),
+                               Scenario = '',
+                               num_people,
+                               chemical,
+                               log_AC50,
+                               log_k_off,
+                               log_k_on){
+  
+  normal_dr <- dose_response_sims$normal
+  obese_dr <- dose_response_sims$obese
+
+  normal_plasma <- exposure_sims$normal
+  obese_plasma <- exposure_sims$obese
+
+  normal_params <- exposure_params$normal
+  obese_params <- exposure_params$obese  
+
+print('Starting normal')
+  normal_hysteresis_stats <- data.table(individual = rep(1:(num_people+1), length(normal_dr)),
+                               time_max_plasma = unname(unlist(lapply(normal_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[which.max(Cplasma), time]})}))),
+                               time_max_response = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[which.max(response), time]})}))),
+                               max_plasma = unname(unlist(lapply(normal_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[which.max(Cplasma), Cplasma]})}))),
+                               max_response = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[which.max(response), response]})}))),
+                               plasma_at_max_response = unname(unlist(purrr::map2(.x = normal_plasma, .y = normal_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                                   r_max_time <- data.table(j)[which.max(response), time]
+                                   return(data.table(i)[time == r_max_time, Cplasma])
+                               })}))),
+                               response_at_max_plasma = unname(unlist(purrr::map2(.x = normal_plasma, .y = normal_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                                   p_max_time <- data.table(i)[which.max(Cplasma), time]
+                                   return(data.table(j)[time == p_max_time, response])
+                               })}))),
+                               bounded_area = unname(unlist(purrr::map2(.x = normal_plasma, .y = normal_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                                   plasma <- c(data.table(i)[, Cplasma], 0)
+                                   response <- c(data.table(j)[, response], 0)
+                                   len <- length(plasma)
+                                   return(sum(plasma[1:(len - 1)]*response[2:len] - plasma[2:len]*response[1:(len-1)])/2)
+                                   })}))),
+                               #convex_hull_bounded_area = unname(unlist(purrr::map2(.x = normal_plasma, .y = normal_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                               #    plasma <- c(data.table(i)[, Cplasma], 0)
+                               #    response <- c(data.table(j)[, response], 0)
+                               #    index <- grDevices::chull(x = plasma, y = response)
+                               #    ch_plasma <- plasma[c(index, index[[1]])]
+                               #    ch_response <- response[c(index, index[[1]])]
+                               #    len <- length(ch_plasma)
+                               #    return(abs(sum(ch_plasma[1:(len - 1)]*ch_response[2:len] - plasma[2:len]*response[1:(len-1)])/2))
+                               #    })}))),
+                               BW = c(unname(unlist(lapply(normal_params, function(t) {c(t$BW, mean(t$BW))})))),
+                               Age = rep(c(10*(1+1:length(normal_dr))), each = (num_people+1)),
+                               Scenario = Scenario,
+                               Weight = 'Normal',
+                               Chemical = chemical,
+                               log_AC50 = log_AC50,
+                               log_k_off = log_k_off,
+                               log_k_on = log_k_on)
+print('Starting obese')
+  obese_hysteresis_stats <- data.table(individual = rep(1:(num_people+1), length(obese_dr)),
+                               time_max_plasma = unname(unlist(lapply(obese_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[which.max(Cplasma), time]})}))),
+                               time_max_response = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[which.max(response), time]})}))),
+                               max_plasma = unname(unlist(lapply(obese_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[which.max(Cplasma), Cplasma]})}))),
+                               max_response = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[which.max(response), time]})}))),
+                               plasma_at_max_response = unname(unlist(purrr::map2(.x = obese_plasma, .y = obese_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                                   r_max_time <- data.table(j)[which.max(response), time]
+                                   return(data.table(i)[time == r_max_time, Cplasma])
+                               })}))),
+                               response_at_max_plasma = unname(unlist(purrr::map2(.x = obese_plasma, .y = obese_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                                   p_max_time <- data.table(i)[which.max(Cplasma), time]
+                                   return(data.table(j)[time == p_max_time, response])
+                               })}))),
+                               bounded_area = unname(unlist(purrr::map2(.x = obese_plasma, .y = obese_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                                   plasma <- c(data.table(i)[, Cplasma], 0)
+                                   response <- c(data.table(j)[, response], 0)
+                                   len <- length(plasma)
+                                   return(sum(plasma[1:(len - 1)]*response[2:len] - plasma[2:len]*response[1:(len-1)])/2)
+                                   })}))),
+                               #convex_hull_bounded_area = unname(unlist(purrr::map2(.x = obese_plasma, .y = obese_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                               #    plasma <- c(data.table(i)[, Cplasma], 0)
+                               #    response <- c(data.table(j)[, response], 0)
+                               #    index <- grDevices::chull(x = plasma, y = response)
+                               #    ch_plasma <- plasma[c(index, index[[1]])]
+                               #    ch_response <- response[c(index, index[[1]])]
+                               #    len <- length(ch_plasma)
+                               #    return(abs(sum(ch_plasma[1:(len - 1)]*ch_response[2:len] - plasma[2:len]*response[1:(len-1)])/2))
+                               #    })}))),
+                               BW = c(unname(unlist(lapply(obese_params, function(t) {c(t$BW, mean(t$BW))})))),
+                               Age = rep(c(10*(1+1:length(obese_dr))), each = (num_people+1)),
+                               Scenario = Scenario,
+                               Weight = 'Obese',
+                               Chemical = chemical,
+                               log_AC50 = log_AC50,
+                               log_k_off = log_k_off,
+                               log_k_on = log_k_on)
+
+  return(list('normal' = list('normal_hysteresis_stats' = normal_hysteresis_stats),
+       'obese' = list('obese_hysteresis_stats' = obese_hysteresis_stats)))    
 
 }
 
