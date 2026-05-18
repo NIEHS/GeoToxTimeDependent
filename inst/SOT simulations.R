@@ -277,62 +277,75 @@ constant_exposure <- function(chem.cas = '',
 # Calc_ss for populations and exposures
 analytic_css <- function(dose,
                         population_parameters,
-                        chemical){
+                        chemical,
+                        dose.units = "mg/kg/day"){
                             print('20 norm start')
        norm_20 <- sapply(1:dim(population_parameters$normal$norm_20_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_20_param[t,],
                                                                              chem.cas = chemical,
                                                                              dose = dose,
-                                                                             model = 'pbtk')
+                                                                             model = 'pbtk',
+                                                                             dose.units = dose.units)
                                                                              })
                                                                              print('20 norm')
        norm_30 <- sapply(1:dim(population_parameters$normal$norm_30_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_30_param[t,],
                                                                              chem.cas = chemical,
                                                                              dose = dose,
-                                                                             model = 'pbtk')})
+                                                                             model = 'pbtk',
+                                                                             dose.units = dose.units)})
        norm_40 <- sapply(1:dim(population_parameters$normal$norm_40_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_40_param[t,],
                                                                              chem.cas = chemical,
                                                                              dose = dose,
-                                                                             model = 'pbtk')})
+                                                                             model = 'pbtk',
+                                                                             dose.units = dose.units)})
                                                                              print('40 norm')
        norm_50 <- sapply(1:dim(population_parameters$normal$norm_50_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_50_param[t,],
                                                                              chem.cas = chemical,
                                                                              dose = dose,
-                                                                             model = 'pbtk')})
+                                                                             model = 'pbtk',
+                                                                             dose.units = dose.units)})
        norm_60 <- sapply(1:dim(population_parameters$normal$norm_60_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_60_param[t,],
                                                                              chem.cas = chemical,
                                                                              dose = dose,
-                                                                             model = 'pbtk')})
+                                                                             model = 'pbtk',
+                                                                             dose.units = dose.units)})
                                                                              print('60 norm')
        norm_70 <- sapply(1:dim(population_parameters$normal$norm_70_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$normal$norm_70_param[t,],
                                                                              chem.cas = chemical,
                                                                              dose = dose,
-                                                                             model = 'pbtk')})     
+                                                                             model = 'pbtk',
+                                                                             dose.units = dose.units)})     
                                                                              print('norm done')
 
        obese_20 <- sapply(1:dim(population_parameters$obese$obese_20_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_20_param[t,],
                                                                               chem.cas = chemical,
                                                                               dose = dose,
-                                                                              model = 'pbtk')})
+                                                                              model = 'pbtk',
+                                                                             dose.units = dose.units)})
        obese_30 <- sapply(1:dim(population_parameters$obese$obese_30_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_30_param[t,],
                                                                               chem.cas = chemical,
                                                                               dose = dose,
-                                                                              model = 'pbtk')})
+                                                                              model = 'pbtk',
+                                                                             dose.units = dose.units)})
        obese_40 <- sapply(1:dim(population_parameters$obese$obese_40_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_40_param[t,],
                                                                               chem.cas = chemical,
                                                                               dose = dose,
-                                                                              model = 'pbtk')})
+                                                                              model = 'pbtk',
+                                                                             dose.units = dose.units)})
        obese_50 <- sapply(1:dim(population_parameters$obese$obese_50_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_50_param[t,],
                                                                               chem.cas = chemical,
                                                                               dose = dose,
-                                                                              model = 'pbtk')})
+                                                                              model = 'pbtk',
+                                                                             dose.units = dose.units)})
        obese_60 <- sapply(1:dim(population_parameters$obese$obese_60_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_60_param[t,],
                                                                               chem.cas = chemical,
                                                                               dose = dose,
-                                                                              model = 'pbtk')})
+                                                                              model = 'pbtk',
+                                                                             dose.units = dose.units)})
        obese_70 <- sapply(1:dim(population_parameters$obese$obese_70_param)[[1]], function(t) {httk::calc_analytic_css(parameters =  population_parameters$obese$obese_70_param[t,],
                                                                               chem.cas = chemical,
                                                                               dose = dose,
-                                                                              model = 'pbtk')})  
+                                                                              model = 'pbtk',
+                                                                             dose.units = dose.units)})  
 
        return(list('normal' = list('norm_20' = norm_20,
                               'norm_30' = norm_30,
@@ -357,6 +370,8 @@ analytic_css <- function(dose,
 httk_distributions <- function(exposure_sims = list(),
                                exposure_params = list(),
                                Scenario = '',
+                               plots = FALSE,
+                               chemical,
                                num_people){
 
 
@@ -373,13 +388,15 @@ httk_distributions <- function(exposure_sims = list(),
                            BW = c(unname(unlist(lapply(normal_params, function(t) {c(t$BW, mean(t$BW))})))),
                            Age = rep(c(10*(1+1:length(normal_exposure))), each = (num_people+1)),
                            Scenario = Scenario,
-                           Weight = 'Normal')
+                           Weight = 'Normal',
+                           Chemical = chemical)
 
   #print(head(normal_httk, 10))
 
+  if (plots) {
   cplasma_max_normal <- ggplot(normal_httk[-c((num_people+1)*1:length(normal_exposure)),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
   auc_normal <- ggplot(normal_httk[-c((num_people+1)*1:length(normal_params)),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
-
+  }
 
 
   obese_httk <- data.table(individual = rep(1:(num_people+1), length(obese_exposure)),
@@ -388,17 +405,26 @@ httk_distributions <- function(exposure_sims = list(),
                            BW = c(unname(unlist(lapply(obese_params, function(t) {c(t$BW, mean(t$BW))})))),
                            Age = rep(c(10*(1+1:length(obese_exposure))), each = (num_people+1)),
                            Scenario = Scenario,
-                           Weight = 'Obese')
+                           Weight = 'Obese',
+                           Chemical = chemical)
 
+  if (plots) {
   cplasma_max_obese <- ggplot(obese_httk[-c((num_people+1)*1:length(obese_exposure)),], aes(x = Cplasma_max, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('Max Cplasma') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
   auc_obese <- ggplot(obese_httk[-c((num_people+1)*1:length(obese_exposure)),], aes(x = AUC, y = as.character(Age), color = Age, fill = Age)) + ggridges::geom_density_ridges(alpha = 0.5) + xlab('AUC') + ylab('Age cohort') + labs(fill = 'Age cohort', color = 'Age cohort')
+  }
+
+  if (plots){
 
   return(list('normal' = list('normal_httk' = normal_httk,
                        'plots' = list('cplasma_max_normal' = cplasma_max_normal,
                                       'auc_normal' = auc_normal)),
        'obese' = list('obese_httk' = obese_httk,
-                      plots = list('cplasma_max_obese' = cplasma_max_obese,
+                      'plots' = list('cplasma_max_obese' = cplasma_max_obese,
                                    'auc_obese' = auc_obese))))
+  }
+
+  return(list('normal' = list('normal_httk' = normal_httk),
+       'obese' = list('obese_httk' = obese_httk)))
 }
 
 run_simulations <- function(chem.cas = '',
@@ -531,7 +557,8 @@ httk_steady_state_simulation <- function(n_people,
                                     n_cohorts,
                                     chemical,
                                     parameters,
-                                    weight
+                                    weight,
+                                    f.change = 1E-5
                                     ){
        print(n_people)
        print(n_cohorts)
@@ -548,13 +575,44 @@ httk_steady_state_simulation <- function(n_people,
 for (i in 1:n_people){
   for (j in 1:num_cohorts) {
        df[i + (j-1)*n_people,] <- cbind(as.data.frame(httk::calc_css(chem.cas = chemical, 
-                                                                     parameters = parameters[[j]][i,])), Age = cohort_min[j])
+                                                                     parameters = parameters[[j]][i,],
+                                                                     f.change = f.change)), Age = cohort_min[j])
 }
   }
 df$casn <- chemical
 df$weight <- weight
 df$individual <- rep(1:n_people, num_cohorts)
 return(df)
+}
+
+half_life <- function(chemical,
+                      simulate_params,
+                      n_people,
+                      n_cohorts,
+                      weight){
+       num_cohorts <- length(n_cohorts)
+       people_cohorts <- n_people*num_cohorts
+       cohort_min <- unlist(lapply(n_cohorts, min))
+       print(cohort_min)
+       half_life <- data.frame(half_life = numeric(people_cohorts),
+                               Age = numeric(people_cohorts)
+       )
+       for (i in 1:n_people){
+          for (j in 1:num_cohorts){
+              half_life[i + (j-1)*n_people,] <- data.frame(half_life = httk::calc_half_life(chem.cas = chemical,
+                                                                                            parameters = simulate_params[[j]][i,],
+                                                                                            model = 'pbtk'),
+                                                           Age = cohort_min[j])
+              }
+           }
+
+       half_life$individual <- rep(1:n_people, num_cohorts)
+       half_life$casn <- chemical
+       half_life$weight <- weight
+
+       half_life <- data.table::as.data.table(half_life)
+
+       return(half_life)
 }
 
 dose_response_sweep <- function(exposure_sims,
@@ -738,19 +796,29 @@ print('Starting normal')
   normal_hysteresis_stats <- data.table(individual = rep(1:(num_people+1), length(normal_dr)),
                                time_max_plasma = unname(unlist(lapply(normal_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[which.max(Cplasma), time]})}))),
                                time_max_response = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[which.max(response), time]})}))),
-                               max_plasma = unname(unlist(lapply(normal_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[which.max(Cplasma), Cplasma]})}))),
-                               max_response = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[which.max(response), response]})}))),
+                               max_plasma = unname(unlist(lapply(normal_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[, max(Cplasma)]})}))),
+                               max_response = unname(unlist(lapply(normal_dr, function(t) {sapply(t, function(j) {data.table(j)[, max(response)]})}))),
                                plasma_at_max_response = unname(unlist(purrr::map2(.x = normal_plasma, .y = normal_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
-                                   r_max_time <- data.table(j)[which.max(response), time]
-                                   return(data.table(i)[time == r_max_time, Cplasma])
+                                   r_max_time <- data.table(j)[which(response == max(response)), time]
+                                   return(data.table(i)[time %in% r_max_time, max(Cplasma)])
                                })}))),
                                response_at_max_plasma = unname(unlist(purrr::map2(.x = normal_plasma, .y = normal_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
-                                   p_max_time <- data.table(i)[which.max(Cplasma), time]
-                                   return(data.table(j)[time == p_max_time, response])
+                                   p_max_time <- data.table(i)[which(Cplasma == max(Cplasma)), time]
+                                   return(data.table(j)[time %in% p_max_time, max(response)])
                                })}))),
                                bounded_area = unname(unlist(purrr::map2(.x = normal_plasma, .y = normal_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
                                    plasma <- c(data.table(i)[, Cplasma], 0)
                                    response <- c(data.table(j)[, response], 0)
+                                   len <- length(plasma)
+                                   return(sum(plasma[1:(len - 1)]*response[2:len] - plasma[2:len]*response[1:(len-1)])/2)
+                                   })}))),
+                               bounded_area_lb = unname(unlist(purrr::map2(.x = normal_plasma, .y = normal_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                                   final_plasma <- tail(data.table(i), 1)[, Cplasma]
+                                   # Find the last index with a Cplasma value less than the final Cplasma value. If none exist, start at beginning.
+                                   starting_index <- max(which(data.table(i)[, Cplasma] < final_plasma),1)
+                                   ending_index <- length(data.table(i)[, Cplasma])
+                                   plasma <- c(data.table(i)[c(starting_index:ending_index, starting_index), Cplasma])
+                                   response <- c(data.table(j)[c(starting_index:ending_index, starting_index), response])
                                    len <- length(plasma)
                                    return(sum(plasma[1:(len - 1)]*response[2:len] - plasma[2:len]*response[1:(len-1)])/2)
                                    })}))),
@@ -775,19 +843,29 @@ print('Starting obese')
   obese_hysteresis_stats <- data.table(individual = rep(1:(num_people+1), length(obese_dr)),
                                time_max_plasma = unname(unlist(lapply(obese_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[which.max(Cplasma), time]})}))),
                                time_max_response = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[which.max(response), time]})}))),
-                               max_plasma = unname(unlist(lapply(obese_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[which.max(Cplasma), Cplasma]})}))),
-                               max_response = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[which.max(response), time]})}))),
+                               max_plasma = unname(unlist(lapply(obese_plasma, function(t) {sapply(t$numeric, function(j) {data.table(j)[, max(Cplasma)]})}))),
+                               max_response = unname(unlist(lapply(obese_dr, function(t) {sapply(t, function(j) {data.table(j)[, max(response)]})}))),
                                plasma_at_max_response = unname(unlist(purrr::map2(.x = obese_plasma, .y = obese_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
-                                   r_max_time <- data.table(j)[which.max(response), time]
-                                   return(data.table(i)[time == r_max_time, Cplasma])
+                                   r_max_time <- data.table(j)[which(response == max(response)), time]
+                                   return(data.table(i)[time %in% r_max_time, max(Cplasma)])
                                })}))),
                                response_at_max_plasma = unname(unlist(purrr::map2(.x = obese_plasma, .y = obese_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
-                                   p_max_time <- data.table(i)[which.max(Cplasma), time]
-                                   return(data.table(j)[time == p_max_time, response])
+                                   p_max_time <- data.table(i)[which(Cplasma == max(Cplasma)), time]
+                                   return(data.table(j)[time %in% p_max_time, max(response)])
                                })}))),
                                bounded_area = unname(unlist(purrr::map2(.x = obese_plasma, .y = obese_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
                                    plasma <- c(data.table(i)[, Cplasma], 0)
                                    response <- c(data.table(j)[, response], 0)
+                                   len <- length(plasma)
+                                   return(sum(plasma[1:(len - 1)]*response[2:len] - plasma[2:len]*response[1:(len-1)])/2)
+                                   })}))),
+                               bounded_area_lb = unname(unlist(purrr::map2(.x = obese_plasma, .y = obese_dr, .f = function(s,t) {purrr::map2(.x = s$numeric, .y = t, .f = function(i,j) {
+                                   final_plasma <- tail(data.table(i), 1)[, Cplasma]
+                                   # Find the last index with a Cplasma value less than the final Cplasma value. If none exist, start at beginning.
+                                   starting_index <- max(which(data.table(i)[, Cplasma] < final_plasma),1)
+                                   ending_index <- length(data.table(i)[, Cplasma])
+                                   plasma <- c(data.table(i)[c(starting_index:ending_index, starting_index), Cplasma])
+                                   response <- c(data.table(j)[c(starting_index:ending_index, starting_index), response])
                                    len <- length(plasma)
                                    return(sum(plasma[1:(len - 1)]*response[2:len] - plasma[2:len]*response[1:(len-1)])/2)
                                    })}))),
