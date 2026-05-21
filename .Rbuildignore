@@ -23,7 +23,7 @@ inst/Time-dependent-integration\.Rmd$
 inst/Simulated-exposure-scenarios\.html$
 inst/Simulated-exposure-scenarios\.Rmd$
 inst/Figure_generation\.R$
-inst/Per-equilibrium dose response parameter sweep\.R$
+inst/Pre-equilibrium dose response parameter sweep\.R$
 inst/SOT 2026 figures\.R$
 inst/.*\.pdf
 inst/SOT simulations\.R$
