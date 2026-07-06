@@ -110,7 +110,7 @@ periodic_117_81_7_plot <- ggplot() + geom_line(data = merge.data.table(periodic_
   labs(title = 'Periodic Exposure to 117-81-7', x = 'Time (d)', y = expression("Cplasma"~(mu~"M"))) + theme(axis.title = element_text(size = 14))
 
 constant_117_81_7 <- data.table::rbindlist(constant_exposure_117_81_7$normal$constant_norm_20$numeric, fill = TRUE)
-constant_117_81_7_new <- periodic_117_81_7[, .(AUC = max(AUC), Cplasma = max(Cplasma)), by = iteration]
+constant_117_81_7_new <- constant_117_81_7[, .(AUC = max(AUC), Cplasma = max(Cplasma)), by = iteration]
 constant_117_81_7_new[, Cplasma_mod := Cplasma - Cplasma[501]]
 constant_117_81_7_new[, AUC_mod := AUC - AUC[501]]
 constant_117_81_7_percentile <- constant_117_81_7_new[order(Cplasma_mod), iteration][c(25, 475)]
