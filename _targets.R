@@ -16,6 +16,8 @@ library(data.table)
 library(ggplot2)
 # library(tarchetypes) # Load other packages as needed.
 
+print(sessionInfo())
+print(getwd())
 load_httk_data()
 
 controller_local <- crew::crew_controller_local(
@@ -24,7 +26,7 @@ controller_local <- crew::crew_controller_local(
     log_directory = "slurm/",
     log_join = FALSE
   ),
-  workers = 1
+  workers = 3
 )
 
 controller_01 <- crew.cluster::crew_controller_slurm(
@@ -87,12 +89,50 @@ controller_03 <- crew.cluster::crew_controller_slurm(
   tasks_max = Inf
 )
 
+controller_04 <- crew.cluster::crew_controller_slurm(
+  name = "controller_04",
+  workers = 100,
+  # This controlls the number of workers that can be used simultaneously
+  options_cluster = crew.cluster::crew_options_slurm(
+    verbose = TRUE,
+    memory_gigabytes_required = 16,
+    log_output = "slurm/slurm-crew-%j.out",
+    log_error = "slurm/slurm-crew-%j.err",
+    script_lines = c(
+      "#SBATCH --job-name=dispatch"
+    ),
+    #partition = "geo"
+    #partition =  "normal"
+    partition = "highmem"
+  ),
+  tasks_max = Inf
+)
+
+controller_05 <- crew.cluster::crew_controller_slurm(
+  name = "controller_05",
+  workers = 100,
+  # This controlls the number of workers that can be used simultaneously
+  options_cluster = crew.cluster::crew_options_slurm(
+    verbose = TRUE,
+    memory_gigabytes_required = 16,
+    log_output = "slurm/slurm-crew-%j.out",
+    log_error = "slurm/slurm-crew-%j.err",
+    script_lines = c(
+      "#SBATCH --job-name=dispatch"
+    ),
+    #partition = "geo"
+    #partition =  "normal"
+    partition = "highmem"
+  ),
+  tasks_max = Inf
+)
+
 
 #Set target options:
 tar_option_set(
   packages = c('GeoToxTimeDependent', 'httk', 'data.table', 'ggplot2'),
   imports = c('GeoToxTimeDependent'),
-  controller = crew_controller_group(controller_local, controller_01, controller_02, controller_03),
+  controller = crew_controller_group(controller_local, controller_01, controller_02, controller_03, controller_04, controller_05),
   resources = tar_resources(
     crew = tar_resources_crew(controller = "controller_local")
   ),
@@ -146,6 +186,13 @@ list(
                 '133-06-2'),
     iteration = 'list'            
   ),
+
+  tar_target(
+    name = chemicals_figures,
+    command = c('584-84-9', '79-44-7', '117-81-7'),
+    iteration = 'list'
+  ),
+
   tar_target(
     name = number_people,
     command = c(500),
@@ -174,6 +221,18 @@ list(
       pop_simulator(chem.cas = chemicals_mmdbair, samples = number_people)
       },
     pattern = cross(chemicals_mmdbair, number_people),
+    iteration = 'list',
+     resources = targets::tar_resources(
+       crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+
+     tar_target(
+    name = population_figures,
+    command = {
+      pop_simulator(chem.cas = chemicals_figures, samples = number_people)
+      },
+    pattern = cross(chemicals_figures, number_people),
     iteration = 'list',
      resources = targets::tar_resources(
        crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
@@ -210,6 +269,18 @@ list(
       crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
     )
      ),
+tar_target(
+    name = simulate_params_figures,
+    command = {load_httk_data()
+      simulate_parameters(chem.cas = chemicals_figures, mcs = population_figures)
+    },
+    pattern = map(chemicals_figures, population_figures),
+    iteration = 'list',
+    resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+    )
+     ),
+
      tar_target(
     name = simulate_params_test,
     command = {#load_httk_data()
@@ -293,10 +364,47 @@ list(
      ),
      tar_target(
       constant_scenario_mmdbair,
-      command = constant_exposure(chem.cas = chemicals_mmdbair,
+      command = {print(paste('Constant', chemicals_mmdbair))
+        constant_exposure(chem.cas = chemicals_mmdbair,
                                   sim_parms = simulate_params_mmdbair,
-                                  constant_matrix = constant_exp),
+                                  constant_matrix = constant_exp)},
       pattern = map(chemicals_mmdbair, simulate_params_mmdbair),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      acute_scenario_figures,
+      command = acute_exposure(chem.cas = chemicals_figures,
+                               sim_parms = simulate_params_figures,
+                               acute_matrix = acute_exp,
+                               plot = TRUE),
+      pattern = map(chemicals_figures, simulate_params_figures),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      periodic_scenario_figures,
+      command = periodic_exposure(chem.cas = chemicals_figures,
+                                  sim_parms = simulate_params_figures,
+                                  periodic_matrix = periodic_exp,
+                                  plot = TRUE),
+      pattern = map(chemicals_figures, simulate_params_figures),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+     tar_target(
+      constant_scenario_figures,
+      command = constant_exposure(chem.cas = chemicals_figures,
+                                  sim_parms = simulate_params_figures,
+                                  constant_matrix = constant_exp,
+                                  plot = TRUE),
+      pattern = map(chemicals_figures, simulate_params_figures),
       iteration = 'list',
       resources = targets::tar_resources(
       crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
@@ -975,7 +1083,7 @@ list(
       iteration = 'list',
       pattern = cross(log_kinetics, map(chemicals, acute_scenario)),
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01")
+      crew = targets::tar_resources_crew(controller = "controller_03")
      )
     ),
 
@@ -999,7 +1107,7 @@ list(
       iteration = 'list',
       pattern = cross(log_kinetics, map(chemicals, periodic_scenario)),
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01")
+      crew = targets::tar_resources_crew(controller = "controller_04")
      )
     ),
     tar_target(
@@ -1022,7 +1130,7 @@ list(
       iteration = 'list',
       pattern = cross(log_kinetics, map(chemicals, constant_scenario)),
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01")
+      crew = targets::tar_resources_crew(controller = "controller_05")
      )
     ),
 
@@ -1046,7 +1154,7 @@ list(
       iteration = 'list',
       pattern = cross(log_kinetics, map(chemicals_mmdbair, acute_scenario_mmdbair)),
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01")
+      crew = targets::tar_resources_crew(controller = "controller_03")
      )
     ),
 
@@ -1070,7 +1178,7 @@ list(
       iteration = 'list',
       pattern = cross(log_kinetics, map(chemicals_mmdbair, periodic_scenario_mmdbair)),
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01")
+      crew = targets::tar_resources_crew(controller = "controller_04")
      )
     ),
     tar_target(
@@ -1093,9 +1201,176 @@ list(
       iteration = 'list',
       pattern = cross(log_kinetics, map(chemicals_mmdbair, constant_scenario_mmdbair)),
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_03")
+      crew = targets::tar_resources_crew(controller = "controller_05")
      )
     ),
+
+    tar_target(
+      acute_dose_response_thresholds,
+      command = dose_response_threshold_exceedance(dose_response_sims = acute_dr_sweep,
+                                                   Scenario = 'Acute',
+                                                   num_people = number_people,
+                                                   chemical = chemicals,
+                                                   log_AC50 = log_kinetics[3],
+                                                   log_k_off = log_kinetics[1],
+                                                   log_k_on = log_kinetics[2]),
+      pattern = cross(map(cross(log_kinetics, map(chemicals, simulate_params)), acute_dr_sweep), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_03") # Specify the SLURM controller
+     )
+      ),
+
+    tar_target(
+      periodic_dose_response_thresholds,
+      command = dose_response_threshold_exceedance(dose_response_sims = periodic_dr_sweep,
+                                                   Scenario = 'Periodic',
+                                                   num_people = number_people,
+                                                   chemical = chemicals,
+                                                   log_AC50 = log_kinetics[3],
+                                                   log_k_off = log_kinetics[1],
+                                                   log_k_on = log_kinetics[2]),
+      pattern = cross(map(cross(log_kinetics, map(chemicals, simulate_params)), periodic_dr_sweep), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_04") # Specify the SLURM controller
+     )
+      ),
+
+    tar_target(
+      constant_dose_response_thresholds,
+      command = dose_response_threshold_exceedance(dose_response_sims = constant_dr_sweep,
+                                                   Scenario = 'Constant',
+                                                   num_people = number_people,
+                                                   chemical = chemicals,
+                                                   log_AC50 = log_kinetics[3],
+                                                   log_k_off = log_kinetics[1],
+                                                   log_k_on = log_kinetics[2]),
+      pattern = cross(map(cross(log_kinetics, map(chemicals, simulate_params)), constant_dr_sweep), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_05") # Specify the SLURM controller
+     )
+      ),
+
+    tar_target(
+      acute_dose_response_thresholds_prep,
+      command = {
+        dt <- acute_dose_response_thresholds[[1]]
+        chemical <- acute_dose_response_thresholds[[2]]
+        log_AC50 <- unname(acute_dose_response_thresholds[[3]])
+        log_k_off <- unname(acute_dose_response_thresholds[[4]])
+        log_k_on <- unname(acute_dose_response_thresholds[[5]])
+        dt <- dt[, .(time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
+                     response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
+                 by = .(age, Weight)]
+        dt[, `:=`(
+          chemical = chemical,
+          log_AC50 = log_AC50,
+          log_k_off = log_k_off,
+          log_k_on = log_k_on
+    )]
+
+      },
+      pattern = map(acute_dose_response_thresholds, acute_dr_sweep),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_03") # Specify the SLURM controller
+     )
+    ),
+
+    tar_target(
+      periodic_dose_response_thresholds_prep,
+      command = {
+        dt <- periodic_dose_response_thresholds[[1]]
+        chemical <- periodic_dose_response_thresholds[[2]]
+        log_AC50 <- unname(periodic_dose_response_thresholds[[3]])
+        log_k_off <- unname(periodic_dose_response_thresholds[[4]])
+        log_k_on <- unname(periodic_dose_response_thresholds[[5]])
+        dt <- dt[, .(time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
+                     response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
+                 by = .(age, Weight)]
+        dt[, `:=`(
+          chemical = chemical,
+          log_AC50 = log_AC50,
+          log_k_off = log_k_off,
+          log_k_on = log_k_on
+    )]
+
+      },
+      pattern = map(periodic_dose_response_thresholds, periodic_dr_sweep),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_04") # Specify the SLURM controller
+     )
+    ),
+
+    tar_target(
+      constant_dose_response_thresholds_prep,
+      command = {
+        dt <- constant_dose_response_thresholds[[1]]
+        chemical <- constant_dose_response_thresholds[[2]]
+        log_AC50 <- unname(constant_dose_response_thresholds[[3]])
+        log_k_off <- unname(constant_dose_response_thresholds[[4]])
+        log_k_on <- unname(constant_dose_response_thresholds[[5]])
+        dt <- dt[, .(time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
+                     response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
+                 by = .(age, Weight)]
+        dt[, `:=`(
+          chemical = chemical,
+          log_AC50 = log_AC50,
+          log_k_off = log_k_off,
+          log_k_on = log_k_on
+    )]
+
+      },
+      pattern = map(constant_dose_response_thresholds, constant_dr_sweep),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_05") # Specify the SLURM controller
+     )
+    ),
+
+    tar_target(
+      acute_dose_response_thresholds_distribution,
+      command = {
+        dt <- rbindlist(acute_dose_response_thresholds_prep)
+        dt[, Scenario := 'Acute']
+        dt[, log_KD := log_k_off - log_k_on]
+        dt[, .(time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
+               response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
+             by = .(age, Scenario, Weight, chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+
+      }
+    ),
+
+    tar_target(
+      periodic_dose_response_thresholds_distribution,
+      command = {
+        dt <- rbindlist(periodic_dose_response_thresholds_prep)
+        dt[, Scenario := 'Periodic']
+        dt[, log_KD := log_k_off - log_k_on]
+        dt[, .(time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
+               response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
+             by = .(age, Scenario, Weight, chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+
+      }
+    ),
+
+    tar_target(
+      constant_dose_response_thresholds_distribution,
+      command = {
+        dt <- rbindlist(constant_dose_response_thresholds_prep)
+        dt[, Scenario := 'Constant']
+        dt[, log_KD := log_k_off - log_k_on]
+        dt[, .(time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
+               response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
+             by = .(age, Scenario, Weight, chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+
+      }
+    ),
+
+
 
     tar_target(
       acute_dose_response_distribution,
@@ -1110,7 +1385,7 @@ list(
       pattern = cross(map(cross(log_kinetics, map(chemicals, simulate_params)), acute_dr_sweep), number_people),
       iteration = 'list',
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+      crew = targets::tar_resources_crew(controller = "controller_03") # Specify the SLURM controller
      )
      ),
 
@@ -1127,7 +1402,7 @@ list(
       pattern = cross(map(cross(log_kinetics, map(chemicals, simulate_params)), periodic_dr_sweep), number_people),
       iteration = 'list',
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+      crew = targets::tar_resources_crew(controller = "controller_04") # Specify the SLURM controller
      )
     ),
  
@@ -1144,7 +1419,7 @@ list(
       pattern = cross(map(cross(log_kinetics, map(chemicals, simulate_params)), constant_dr_sweep), number_people),
       iteration = 'list',
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+      crew = targets::tar_resources_crew(controller = "controller_05") # Specify the SLURM controller
      )
     ),
 
@@ -1178,7 +1453,7 @@ list(
       pattern = cross(map(cross(log_kinetics, map(chemicals_mmdbair, simulate_params_mmdbair)), periodic_dr_sweep_mmdbair), number_people),
       iteration = 'list',
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+      crew = targets::tar_resources_crew(controller = "controller_04") # Specify the SLURM controller
      )
     ),
  
@@ -1195,7 +1470,7 @@ list(
       pattern = cross(map(cross(log_kinetics, map(chemicals_mmdbair, simulate_params_mmdbair)), constant_dr_sweep_mmdbair), number_people),
       iteration = 'list',
       resources = targets::tar_resources(
-      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+      crew = targets::tar_resources_crew(controller = "controller_05") # Specify the SLURM controller
      )
     ),
 #
@@ -1208,86 +1483,225 @@ list(
 #    )
 
     tar_target(
+      acute_dr_aggregation_prep,
+      command = {
+          normal_dr <- acute_dose_response_distribution$normal$normal_dose_response
+          normal_half_life <- chemical_half_life_normal
+          dt_normal <- merge.data.table(normal_dr, normal_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+
+          obese_dr <- acute_dose_response_distribution$obese$obese_dose_response
+          obese_half_life <- chemical_half_life_obese
+          dt_obese <- merge.data.table(obese_dr, obese_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+          
+          rbind(dt_normal, dt_obese)
+      },
+      pattern = cross(map(cross(log_kinetics, map(chemical_half_life_normal, chemical_half_life_obese)), acute_dose_response_distribution), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_03") # Specify the SLURM controller
+     )
+    ),
+
+    tar_target(
       acute_dr_aggregation,
       command = {
-        agg_dr <- rbindlist(lapply(acute_dose_response_distribution, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
+        #agg_dr <- rbindlist(lapply(acute_dose_response_distribution, function(t) {
+        #  normal_dr <- t$normal$normal_dose_response[, index := paste(individual, Age)]
+        #  normal_half_life <- chemical_half_life_normal[, index := paste(individual, Age)]
+        #  dt_normal <- merge.data.table(normal_dr, normal_half_life, by.x = c('Chemical', 'index'), by.y = c('casn', 'index'))
+
+        #  obese_dr <- t$obese$obese_dose_response[, index := paste(individual, Age)]
+        #  obese_half_life <- chemical_half_life_obese[, index := paste(individual, Age)]
+        #  dt_obese <- merge.data.table(obese_dr, obese_half_life, by.x = c('Chemical', 'index'), by.y = c('casn', 'index'))
+          
+        #  rbind(dt_normal, dt_obese)
+          #rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
+        #}))
+
+
         #normal_dr <- acute_dose_response_distribution$normal$normal_dose_response
         #obese_dr <- acute_dose_response_distribution$obese$obese_dose_response
 
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)]))
+        agg_dr <- rbindlist(acute_dr_aggregation_prep)
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay), half_life = mean(half_life)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
+    ),
+
+    tar_target(
+      periodic_dr_aggregation_prep,
+      command = {
+          normal_dr <- periodic_dose_response_distribution$normal$normal_dose_response
+          normal_half_life <- chemical_half_life_normal
+          dt_normal <- merge.data.table(normal_dr, normal_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+
+          obese_dr <- periodic_dose_response_distribution$obese$obese_dose_response
+          obese_half_life <- chemical_half_life_obese
+          dt_obese <- merge.data.table(obese_dr, obese_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+          
+          rbind(dt_normal, dt_obese)
+      },
+      pattern = cross(map(cross(log_kinetics, map(chemical_half_life_normal, chemical_half_life_obese)), periodic_dose_response_distribution), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_04") # Specify the SLURM controller
+     )
     ),
 
      tar_target(
       periodic_dr_aggregation,
       command = {
-        agg_dr <- rbindlist(lapply(periodic_dose_response_distribution, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
+        #agg_dr <- rbindlist(lapply(periodic_dose_response_distribution, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
         #normal_dr <- rbindlist(lapply(periodic_dose_response_distribution, function(t) {t$normal$normal_dose_response}))
         #obese_dr <- rbindlist(lapply(periodic_dose_response_distribution, function(t) {t$obese$obese_dose_response}))
 
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)]))
+        agg_dr <- rbindlist(periodic_dr_aggregation_prep)
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay), half_life = mean(half_life)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
+    ),
+
+    tar_target(
+      constant_dr_aggregation_prep,
+      command = {
+          normal_dr <- constant_dose_response_distribution$normal$normal_dose_response
+          normal_half_life <- chemical_half_life_normal
+          dt_normal <- merge.data.table(normal_dr, normal_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+
+          obese_dr <- constant_dose_response_distribution$obese$obese_dose_response
+          obese_half_life <- chemical_half_life_obese
+          dt_obese <- merge.data.table(obese_dr, obese_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+          
+          rbind(dt_normal, dt_obese)
+      },
+      pattern = cross(map(cross(log_kinetics, map(chemical_half_life_normal, chemical_half_life_obese)), constant_dose_response_distribution), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_05") # Specify the SLURM controller
+     )
     ),
 
     tar_target(
       constant_dr_aggregation,
       command = {
-        agg_dr <- rbindlist(lapply(constant_dose_response_distribution, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
+        #agg_dr <- rbindlist(lapply(constant_dose_response_distribution, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
         #normal_dr <- rbindlist(lapply(constant_dose_response_distribution, function(t) {t$normal$normal_dose_response}))
         #obese_dr <- rbindlist(lapply(constant_dose_response_distribution, function(t) {t$obese$obese_dose_response}))
 
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, AC50, k_off, k_on)]))
+        agg_dr <- rbindlist(constant_dr_aggregation_prep)
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay), half_life = mean(half_life)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
+    ),
+
+    tar_target(
+      acute_dr_aggregation_prep_mmdbair,
+      command = {
+          normal_dr <- acute_dose_response_distribution_mmdbair$normal$normal_dose_response
+          normal_half_life <- chemical_half_life_normal_mmdbair
+          dt_normal <- merge.data.table(normal_dr, normal_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+
+          obese_dr <- acute_dose_response_distribution_mmdbair$obese$obese_dose_response
+          obese_half_life <- chemical_half_life_obese_mmdbair
+          dt_obese <- merge.data.table(obese_dr, obese_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+          
+          rbind(dt_normal, dt_obese)
+      },
+      pattern = cross(map(cross(log_kinetics, map(chemical_half_life_normal_mmdbair, chemical_half_life_obese_mmdbair)), acute_dose_response_distribution_mmdbair), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
     ),
 
     tar_target(
       acute_dr_aggregation_mmdbair,
       command = {
-        agg_dr <- rbindlist(lapply(acute_dose_response_distribution_mmdbair, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
+        #agg_dr <- rbindlist(lapply(acute_dose_response_distribution_mmdbair, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
         #normal_dr <- acute_dose_response_distribution$normal$normal_dose_response
         #obese_dr <- acute_dose_response_distribution$obese$obese_dose_response
 
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)]))
+        agg_dr <- rbindlist(acute_dr_aggregation_prep_mmdbair)
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay), half_life = mean(half_life)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
+    ),
+
+    tar_target(
+      periodic_dr_aggregation_prep_mmdbair,
+      command = {
+          normal_dr <- periodic_dose_response_distribution_mmdbair$normal$normal_dose_response
+          normal_half_life <- chemical_half_life_normal_mmdbair
+          dt_normal <- merge.data.table(normal_dr, normal_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+
+          obese_dr <- periodic_dose_response_distribution_mmdbair$obese$obese_dose_response
+          obese_half_life <- chemical_half_life_obese_mmdbair
+          dt_obese <- merge.data.table(obese_dr, obese_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+          
+          rbind(dt_normal, dt_obese)
+      },
+      pattern = cross(map(cross(log_kinetics, map(chemical_half_life_normal_mmdbair, chemical_half_life_obese_mmdbair)), periodic_dose_response_distribution_mmdbair), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
     ),
 
      tar_target(
       periodic_dr_aggregation_mmdbair,
       command = {
-        agg_dr <- rbindlist(lapply(periodic_dose_response_distribution_mmdbair, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
+        #agg_dr <- rbindlist(lapply(periodic_dose_response_distribution_mmdbair, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
         #normal_dr <- rbindlist(lapply(periodic_dose_response_distribution, function(t) {t$normal$normal_dose_response}))
         #obese_dr <- rbindlist(lapply(periodic_dose_response_distribution, function(t) {t$obese$obese_dose_response}))
 
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)]))
+        agg_dr <- rbindlist(periodic_dr_aggregation_prep_mmdbair)
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay), half_life = mean(half_life)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
+    ),
+
+    tar_target(
+      constant_dr_aggregation_prep_mmdbair,
+      command = {
+          normal_dr <- constant_dose_response_distribution_mmdbair$normal$normal_dose_response
+          normal_half_life <- chemical_half_life_normal_mmdbair
+          dt_normal <- merge.data.table(normal_dr, normal_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+
+          obese_dr <- constant_dose_response_distribution_mmdbair$obese$obese_dose_response
+          obese_half_life <- chemical_half_life_obese_mmdbair
+          dt_obese <- merge.data.table(obese_dr, obese_half_life, by.x = c('Chemical', 'Age', 'individual'), by.y = c('casn', 'Age', 'individual'))
+          
+          rbind(dt_normal, dt_obese)
+      },
+      pattern = cross(map(cross(log_kinetics, map(chemical_half_life_normal_mmdbair, chemical_half_life_obese_mmdbair)), constant_dose_response_distribution_mmdbair), number_people),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
     ),
 
     tar_target(
       constant_dr_aggregation_mmdbair,
       command = {
-        agg_dr <- rbindlist(lapply(constant_dose_response_distribution_mmdbair, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
+        #agg_dr <- rbindlist(lapply(constant_dose_response_distribution_mmdbair, function(t) {rbind(t$normal$normal_dose_response, t$obese$obese_dose_response)}))
         #normal_dr <- rbindlist(lapply(constant_dose_response_distribution, function(t) {t$normal$normal_dose_response}))
         #obese_dr <- rbindlist(lapply(constant_dose_response_distribution, function(t) {t$obese$obese_dose_response}))
 
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, Chemical, AC50, k_off, k_on)]))
+        agg_dr <- rbindlist(constant_dr_aggregation_prep_mmdbair)
         agg_dr[, log_KD := log_k_off - log_k_on]
-        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
+        agg_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW), response_ratio = mean(response_ss_ratio), decay_mean = mean(mean_decay), half_life = mean(half_life)), by = .(Age, Scenario, Weight, Chemical, log_AC50, log_k_off, log_k_on, log_KD)]
       }
     ),
 
@@ -1349,14 +1763,29 @@ list(
     ),
 
     tar_target(
+      acute_dr_hysteresis_aggregation_mmdbair_prep,
+      command = {
+        normal_hysteresis <- acute_dr_hysteresis_mmdbair$normal$normal_hysteresis_stats
+
+        obese_hysteresis <- acute_dr_hysteresis_mmdbair$obese$obese_hysteresis_stats
+
+        data.table::data.table(rbind(normal_hysteresis, obese_hysteresis))
+        },
+        iteration = 'list',
+        pattern = acute_dr_hysteresis_mmdbair,
+         resources = targets::tar_resources(
+              crew = targets::tar_resources_crew(controller = "controller_03") # Specify the SLURM controller
+     )),
+    tar_target(
       acute_dr_hysteresis_aggregation_mmdbair,
       command = {
-        agg_dr <- rbindlist(lapply(acute_dr_hysteresis_mmdbair, function(t) {rbind(t$normal$normal_hysteresis_stats, t$obese$obese_hysteresis_stats)}))
+        #agg_dr <- rbindlist(lapply(acute_dr_hysteresis_mmdbair, function(t) {rbind(t$normal$normal_hysteresis_stats, t$obese$obese_hysteresis_stats)}))
         #normal_dr <- acute_dose_response_distribution$normal$normal_dose_response
         #obese_dr <- acute_dose_response_distribution$obese$obese_dose_response
 
         #rbindlist(list(normal_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)], 
         #               obese_dr[, .(response_max_mean = mean(response_max), AUC_mean = mean(AUC), BW_mean = mean(BW)), by = .(Age, Scenario, Weight, AC50, k_off, k_on)]))
+        agg_dr <- rbindlist(acute_dr_hysteresis_aggregation_mmdbair_prep)
         agg_dr[, log_KD := log_k_off - log_k_on]
         agg_dr[, response_lag := time_max_response - time_max_plasma]
         agg_dr[, .(time_max_plasma_mean = mean(time_max_plasma), time_max_response_mean = mean(time_max_response), 
