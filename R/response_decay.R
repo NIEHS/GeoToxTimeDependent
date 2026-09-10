@@ -349,3 +349,230 @@ threshold_exceedance <- function(thresholds,
 
 
 }
+
+solve_dose_response <- function(plasma_response_data = NULL,
+                                k_off = NULL,
+                                k_on = NULL,
+                                param_3 = FALSE){
+
+  t_idx <- which(names(plasma_response_data) == 'time')
+  p_idx <- which(names(plasma_response_data) == 'Cplasma')
+  r_idx <- which(names(plasma_response_data) == 'response')
+
+  # Default for 2-param
+  n <- 1
+
+  obj_dose_response <- function(par){
+
+    log_max = par[1]
+    log_AC50 = par[2]
+    if (param_3)  {n = par[3]}
+
+    max_resp = 10^log_max
+    AC50 = 10^log_AC50
+
+
+
+
+
+    predicted_response <- response_decay_exponential(plasma_data = plasma_response_data[, c(t_idx, p_idx)],
+                                                     max = max_resp,
+                                                     AC50 = AC50,
+                                                     n = n,
+                                                     k_off = k_off,
+                                                     k_on = k_on)
+
+
+
+    sum((plasma_response_data[, r_idx] - predicted_response$response)**2)
+
+
+  }
+
+  # Use log scale
+  if (param_3){
+  stmat <- expand.grid(log_max = seq(from = 1, to = 2, by = .1),
+                       log_AC50 = seq(from = 0, to = 2, by = 0.1),
+                       hill_slope = seq(from = 1.5, to = 2.5, by = 0.1))
+  } else {
+    stmat <- expand.grid(log_max = seq(from = 1, to = 2, by = .1),
+                         log_AC50 = seq(from = 0, to = 2, by = 0.1))
+  }
+
+  result <- multistart(stmat, obj_dose_response, method = 'Nelder-Mead')
+
+  return(result)
+
+
+}
+
+solve_kinetics <- function(plasma_response_data = NULL,
+                           max = NULL,
+                           AC50 = NULL,
+                           KD = NULL){
+
+  t_idx <- which(names(plasma_response_data) == 'time')
+  p_idx <- which(names(plasma_response_data) == 'Cplasma')
+  r_idx <- which(names(plasma_response_data) == 'response')
+
+
+
+
+  if (!is.null(KD)){
+
+    obj_kinetics_fixed <- function(par){
+
+      log_k_off = par[1] + log10(KD)
+      log_k_on = par[1]
+
+      # Use regular scale
+      k_off <- 10^log_k_off
+      k_on <- 10^log_k_on
+
+      predicted_response <- response_decay_exponential(plasma_data = plasma_response_data[, c(t_idx, p_idx)],
+                                                       max = max,
+                                                       AC50 = AC50,
+                                                       n = 1,
+                                                       k_off = k_off,
+                                                       k_on = k_on)
+
+      sum((plasma_response_data[, r_idx] - predicted_response$response)**2)
+
+
+    }
+
+    #Use log scale
+    #par_fixed <- c(3 + log10(KD), 3)
+    k_on_seq <- seq(from = -6, to = 6, by = 0.1)
+    stmat <- as.matrix(data.frame(k_on = k_on_seq))
+
+
+    #result_fixed <- optimx(par_fixed, obj_kinetics_fixed)
+    result_fixed <- multistart(stmat, obj_kinetics_fixed, method = 'Nelder-Mead')
+    result_fixed$k_off <- result_fixed$k_on + log10(KD)
+
+    return(result_fixed)
+
+  } else {
+obj_kinetics <- function(par){
+
+  log_k_off = par[1]
+  log_k_on = par[2]
+
+  k_off <- 10^log_k_off
+  k_on <- 10^log_k_on
+
+
+
+  predicted_response <- response_decay_exponential(plasma_data = plasma_response_data[, c(t_idx, p_idx)],
+                                                   max = max,
+                                                   AC50 = AC50,
+                                                   n = 1,
+                                                   k_off = k_off,
+                                                   k_on = k_on)
+
+
+
+  sum((plasma_response_data[, r_idx] - predicted_response$response)**2)
+
+
+}
+
+
+# Use log scale
+#par <- c(k_off = -6, k_on = 3)
+stmat <- expand.grid(k_off = seq(from = -12, to = 0, by = 0.1), k_on = seq(from = -3, to = 6, by = 0.1))
+
+#result <- optimx(par = par, obj_kinetics)
+result <- multistart(stmat, obj_kinetics, method = 'Nelder-Mead')
+
+return(result)
+}
+
+
+}
+
+calc_kinetics <- function(plasma_response_data = NULL,
+                          max = NULL,
+                          AC50 = NULL,
+                          KD = NULL){
+
+  t_idx <- which(names(plasma_response_data) == 'time')
+  p_idx <- which(names(plasma_response_data) == 'Cplasma')
+  r_idx <- which(names(plasma_response_data) == 'response')
+
+
+
+
+  if (!is.null(KD)){
+
+    obj_kinetics_fixed <- function(k_off, k_on){
+
+      log_k_off = k_off
+      log_k_on = k_on
+
+      # Use regular scale
+      k_off <- 10^log_k_off
+      k_on <- 10^log_k_on
+
+      predicted_response <- response_decay_exponential(plasma_data = plasma_response_data[, c(t_idx, p_idx)],
+                                                       max = max,
+                                                       AC50 = AC50,
+                                                       n = 1,
+                                                       k_off = k_off,
+                                                       k_on = k_on)
+
+      sum((plasma_response_data[, r_idx] - predicted_response$response)**2)
+
+
+    }
+
+    #Use log scale
+    #par_fixed <- c(3 + log10(KD), 3)
+    k_on_seq <- seq(from = -6, to = 6, by = 0.1)
+    stdf <- data.frame(k_off = k_on_seq+log10(KD), k_on = k_on_seq)
+
+
+    #result_fixed <- optimx(par_fixed, obj_kinetics_fixed)
+    result_fixed <- mapply(obj_kinetics_fixed, stdf$k_off, stdf$k_on)
+
+    return(cbind(stdf, value = result_fixed))
+
+  } else {
+    obj_kinetics <- function(k_off, k_on){
+
+      log_k_off = k_off
+      log_k_on = k_on
+
+      k_off <- 10^log_k_off
+      k_on <- 10^log_k_on
+
+
+
+      predicted_response <- response_decay_exponential(plasma_data = plasma_response_data[, c(t_idx, p_idx)],
+                                                       max = max,
+                                                       AC50 = AC50,
+                                                       n = 1,
+                                                       k_off = k_off,
+                                                       k_on = k_on)
+
+
+
+      sum((plasma_response_data[, r_idx] - predicted_response$response)**2)
+
+
+    }
+
+
+    # Use log scale
+    #par <- c(k_off = -6, k_on = 3)
+    stdf <- data.frame(expand.grid(k_off = seq(from = -12, to = 0, by = 0.1), k_on = seq(from = -6, to = 6, by = 0.1)))
+
+    #result <- optimx(par = par, obj_kinetics)
+    result <- mapply(obj_kinetics, stdf$k_off, stdf$k_on)
+
+    return(cbind(stdf, value = result))
+  }
+
+
+}
