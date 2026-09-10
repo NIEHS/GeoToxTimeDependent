@@ -17,17 +17,19 @@
 ^CRAN-SUBMISSION$
 \.RDatatmp$
 \.RDatatmp1$
-inst/data_discrepancies\.R$
-inst/Time-dependent-integration\.html$
-inst/Time-dependent-integration\.Rmd$
-inst/Simulated-exposure-scenarios\.html$
-inst/Simulated-exposure-scenarios\.Rmd$
-inst/Figure_generation\.R$
-inst/Pre-equilibrium dose response parameter sweep\.R$
-inst/SOT 2026 figures\.R$
+^inst/
+inst/data_discrepancies\.R
+inst/Time-dependent-integration\.html
+inst/Time-dependent-integration\.Rmd
+inst/Simulated-exposure-scenarios\.html
+inst/Simulated-exposure-scenarios\.Rmd
+inst/Figure_generation\.R
+inst/Pre-equilibrium dose response parameter sweep\.R
+inst/SOT 2026 figures\.R
 inst/.*\.pdf
-inst/SOT simulations\.R$
-inst/SOT_simulations
+^inst/SOT simulations\.R
+^inst/SOT_simulations/.*\.pdf
+^inst/SOT_simulations/.*\.RDS
 inst/sim_test\.R
 \\.sh
 _targets\.R
