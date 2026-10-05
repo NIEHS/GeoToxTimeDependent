@@ -330,3 +330,58 @@ plasma_dr_curve <- ggplot(cbind(data.table(dr_data$normal$acute_norm_20[[1]])[, 
 #ggsave('./inst/NCPostdoc2026_hysteresis_95_80_7_vertical.png', 
 #       plot = cowplot::plot_grid(plasma_dr_curve, hysteresis_curve, nrow = 2),
 #       device = 'png', width = 4110, height = 7680, units = 'px')
+
+
+acute_dr_hysteresis_aggregation <- tar_read(acute_dr_hysteresis_aggregation)
+
+bounded_area_plot <- ggplot(data.table(acute_dr_hysteresis_aggregation)[log_AC50 == 0 &  bounded_area_mean > 50, 
+                            .(response_lag_mean = mean(response_lag_mean), bounded_area_mean = mean(bounded_area_mean)) ,
+                            by = .(Chemical, Weight, log_AC50, log_k_off, log_k_on, log_KD)], 
+                            aes(x = response_lag_mean, y = bounded_area_mean, color = as.factor(Chemical), shape = Weight)) + 
+                            geom_point()+ facet_grid(rows = vars(log_k_on), cols = vars(log_k_off)) + 
+                            scale_y_log10() + 
+                            labs(color = 'Chemical', x = 'Response lag', y = 'Bounded area', 
+                                 title = 'Hysteresis bounded area against peak response lag time',
+                                 subtitle = 'Faceted by `log_k_on` (rows) and `log_k_off` (cols)')
+##
+## acute_dr_hysteresis_aggregation[Weight == 'Normal' & log_AC50 == 0 & bounded_area_lb_mean > 300 & log_k_on == 0 & log_k_off == -6, 
+##                                 .(response_lag_mean = mean(response_lag_mean),
+##                                   bounded_area_lb_mean = mean(bounded_area_lb_mean), 
+##                                   max_response_mean = mean(max_response_mean), 
+##                                   max_plasma_mean = mean(max_plasma_mean),  
+##                                   plasma_at_max_response_mean = mean(plasma_at_max_response_mean), 
+##                                   normalized_area = mean(bounded_area_lb_mean/(max_plasma_mean*max_response_mean))), 
+##                                 by = .(Chemical, Weight, log_k_off, log_k_on)][order(Weight, -normalized_area),]
+##
+##
+## Focus on Age 20
+##
+## acute_dr_hysteresis_aggregation[Age == 20 & Weight == 'Normal' & log_AC50 == 0 & bounded_area_lb_mean > 300 & log_k_on == 0 & log_k_off == -6, 
+##                                 .(response_lag_mean = mean(response_lag_mean), 
+##                                   bounded_area_lb_mean = mean(bounded_area_lb_mean), 
+##                                   max_response_mean = mean(max_response_mean), 
+##                                   max_plasma_mean = mean(max_plasma_mean), 
+##                                   plasma_at_max_response_mean = mean(plasma_at_max_response_mean), 
+##                                   normalized_area = mean(bounded_area_lb_mean/(max_plasma_mean*max_response_mean))), 
+##                                 by = .(Chemical, Weight, Age, log_k_off, log_k_on)][order(-normalized_area),]
+##
+## Look at high area hysteresis curve chemicals (unique chemicals from above chunk)
+##
+## View(acute_dose_response_thresholds_distribution[chemical %in% c("133-90-4", "51-28-5",  "94-75-7",  "121-14-2",  "107-21-1", "534-52-1", "98-86-2", "95-80-7",  "79-44-7") & 
+##                                                 log_AC50 == 0 & Weight == 'Normal' & log_k_off == -8 & log_k_on == 0 & age == 20, ])
+
+
+# Load in dose-response aggregate data
+adragg <- tar_read(acute_dr_aggregation)
+pdragg <- tar_read(periodic_dr_aggregation)
+cdragg <- tar_read(constant_dr_aggregation)
+
+# Plot data for chemicals c('60-11-7', '72-43-5', '822-06-0') for the 20-29 age cohort, 'Normal' weight category, log_AC50 = 0. Parameter sweep over binding kinetics values.
+dr_tk_plots <-  ggplot(rbind(adragg, pdragg, cdragg)[Age == 20 & Weight == 'Normal' & log_AC50 == 0 & Chemical %in% c('60-11-7', '72-43-5', '822-06-0'),], 
+                aes(x = response_max_mean, y = AUC_mean, shape = as.factor(Scenario), color = as.factor(Chemical))) + 
+                geom_point() + 
+                facet_grid(rows = vars(log_k_on), cols = vars(log_k_off)) + 
+                labs(color = 'Chemical', 
+                x = 'Max Response', 
+                y = 'Response AUC', 
+                shape = 'Scenario')
