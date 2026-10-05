@@ -24,9 +24,14 @@ inst/Simulated-exposure-scenarios\.html$
 inst/Simulated-exposure-scenarios\.Rmd$
 inst/.*\.R
 inst/.*\.rds
-inst/Figure_generation.R
-inst/SOT simulations.R
 inst/SOT_simulations
+inst/Figure_generation\.R
+inst/Pre-equilibrium dose response parameter sweep\.R
+inst/SOT 2026 figures\.R
+inst/.*\.pdf
+^inst/SOT simulations\.R
+^inst/SOT_simulations/.*\.pdf
+^inst/SOT_simulations/.*\.RDS
 inst/sim_test\.R
 \\.sh
 _targets\.R
