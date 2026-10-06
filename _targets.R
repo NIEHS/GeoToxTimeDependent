@@ -14,6 +14,8 @@ library(httk)
 library(purrr)
 library(data.table)
 library(ggplot2)
+library(ctxR)
+library(treecompareR)
 # library(tarchetypes) # Load other packages as needed.
 
 print(sessionInfo())
@@ -127,12 +129,31 @@ controller_05 <- crew.cluster::crew_controller_slurm(
   tasks_max = Inf
 )
 
+controller_06 <- crew.cluster::crew_controller_slurm(
+  name = "controller_06",
+  workers = 2,
+  # This controlls the number of workers that can be used simultaneously
+  options_cluster = crew.cluster::crew_options_slurm(
+    verbose = TRUE,
+    memory_gigabytes_required = 16,
+    log_output = "slurm/slurm-crew-%j.out",
+    log_error = "slurm/slurm-crew-%j.err",
+    script_lines = c(
+      "#SBATCH --job-name=dispatch"
+    ),
+    #partition = "geo"
+    #partition =  "normal"
+    partition = "highmem"
+  ),
+  tasks_max = Inf
+)
+
 
 #Set target options:
 tar_option_set(
   packages = c('GeoToxTimeDependent', 'httk', 'data.table', 'ggplot2'),
   imports = c('GeoToxTimeDependent'),
-  controller = crew_controller_group(controller_local, controller_01, controller_02, controller_03, controller_04, controller_05),
+  controller = crew_controller_group(controller_local, controller_01, controller_02, controller_03, controller_04, controller_05, controller_06),
   resources = tar_resources(
     crew = tar_resources_crew(controller = "controller_local")
   ),
@@ -191,6 +212,79 @@ list(
     name = chemicals_figures,
     command = c('584-84-9', '79-44-7', '117-81-7'),
     iteration = 'list'
+  ),
+
+  tar_target(
+    name = pbtk_dtxsids,
+    command = {
+      load_dawson2021()
+      load_honda2023()
+      load_honda2025()
+      load_pradeep2020()
+      load_sipes2017()
+
+      return(get_cheminfo(model = 'pbtk', info = 'dtxsid'))
+    },
+    iteration = 'list'
+  ),
+
+  tar_target(
+    name = pbtk_half_life,
+    command = {
+      attempt <- tryCatch(
+        {
+      calc_half_life(dtxsid = pbtk_dtxsids, model = 'pbtk')
+        }, 
+        error = function(cond){
+          message(cond$message)
+          return(NA)
+        }
+      )
+      return(attempt)
+    },
+    pattern = map(pbtk_dtxsids),
+     resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+    )
+
+  ),
+
+  tar_target(
+    name = pbtk_half_life_data,
+    command = {data.table(dtxsid = pbtk_dtxsids, 
+                          half_life = pbtk_half_life)
+              }
+  ),
+
+  tar_target(
+    name = pbtk_inchikeys_list,
+    command = {print('start')
+      data <- ctxR::get_chemical_details_batch(DTXSID = pbtk_half_life_data$dtxsid)
+      print('data secured')
+              setnames(data, old = 'inchikey', new = 'INCHIKEY')
+              print('column names corrected')
+              # Split data into chunks of length 100 for API calls                
+               new_dt <- split(data, ceiling((seq_len(nrow(data)) - 1) %/% 10))
+               return(new_dt)
+
+    },
+    iteration = 'list'
+  ),
+
+  tar_target(
+    name = pbtk_classyfire_data_list,
+    command = {library(treecompareR)
+    treecompareR::classify_datatable(pbtk_inchikeys_list)},
+    iteration = 'list',
+    pattern = map(pbtk_inchikeys_list),
+     #resources = targets::tar_resources(
+     # crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+    #)
+  ),
+
+  tar_target(
+    name = pbtk_classyfire_dt,
+    command = {data.table::rbindlist(pbtk_classyfire_data_list, fill = TRUE)}
   ),
 
   tar_target(
@@ -692,6 +786,21 @@ tar_target(
                             periodic_distribution),
                         chemical_half_life_normal),
                     chemicals),
+      iteration = 'list',
+      resources = targets::tar_resources(
+      crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
+     )
+     ),
+
+     tar_target(
+      test_norm_dist,
+      command = {
+        casn <- chemicals
+        dt <- merge.data.table(acute_distribution$normal$normal_httk[, index := paste(individual, Age)],
+                                                constant_distribution$normal$normal_httk[, index := paste(individual, Age)], by = 'index', suffixes = c('.a', '.c'))[, casn := casn]
+      },
+
+      pattern = map(map(acute_distribution, constant_distribution), chemicals),
       iteration = 'list',
       resources = targets::tar_resources(
       crew = targets::tar_resources_crew(controller = "controller_01") # Specify the SLURM controller
@@ -1261,8 +1370,8 @@ tar_target(
         log_AC50 <- unname(acute_dose_response_thresholds[[3]])
         log_k_off <- unname(acute_dose_response_thresholds[[4]])
         log_k_on <- unname(acute_dose_response_thresholds[[5]])
-        dt <- dt[, .(time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
-                     response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
+        dt <- dt[, .(time_0 = mean(time_exceeded_0), time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
+                     response_0 = mean(response_sum_0), response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
                  by = .(age, Weight)]
         dt[, `:=`(
           chemical = chemical,
@@ -1287,8 +1396,8 @@ tar_target(
         log_AC50 <- unname(periodic_dose_response_thresholds[[3]])
         log_k_off <- unname(periodic_dose_response_thresholds[[4]])
         log_k_on <- unname(periodic_dose_response_thresholds[[5]])
-        dt <- dt[, .(time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
-                     response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
+        dt <- dt[, .(time_0 = mean(time_exceeded_0), time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
+                     response_0 = mean(response_sum_0), response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
                  by = .(age, Weight)]
         dt[, `:=`(
           chemical = chemical,
@@ -1313,8 +1422,8 @@ tar_target(
         log_AC50 <- unname(constant_dose_response_thresholds[[3]])
         log_k_off <- unname(constant_dose_response_thresholds[[4]])
         log_k_on <- unname(constant_dose_response_thresholds[[5]])
-        dt <- dt[, .(time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
-                     response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
+        dt <- dt[, .(time_0 = mean(time_exceeded_0), time_10 = mean(time_exceeded_10), time_25 = mean(time_exceeded_25), time_50 = mean(time_exceeded_50), time_75 = mean(time_exceeded_75), time_90 = mean(time_exceeded_90), 
+                     response_0 = mean(response_sum_0), response_10 = mean(response_sum_10), response_25 = mean(response_sum_25), response_50 = mean(response_sum_50), response_75 = mean(response_sum_75), response_90 = mean(response_sum_90)),
                  by = .(age, Weight)]
         dt[, `:=`(
           chemical = chemical,
@@ -1337,8 +1446,8 @@ tar_target(
         dt <- rbindlist(acute_dose_response_thresholds_prep)
         dt[, Scenario := 'Acute']
         dt[, log_KD := log_k_off - log_k_on]
-        dt[, .(time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
-               response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
+        dt[, .(time_0_mean = mean(time_0), time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
+               response_0_mean = mean(response_0), response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
              by = .(age, Scenario, Weight, chemical, log_AC50, log_k_off, log_k_on, log_KD)]
 
       }
@@ -1350,8 +1459,8 @@ tar_target(
         dt <- rbindlist(periodic_dose_response_thresholds_prep)
         dt[, Scenario := 'Periodic']
         dt[, log_KD := log_k_off - log_k_on]
-        dt[, .(time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
-               response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
+        dt[, .(time_0_mean = mean(time_0), time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
+               response_0_mean = mean(response_0), response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
              by = .(age, Scenario, Weight, chemical, log_AC50, log_k_off, log_k_on, log_KD)]
 
       }
@@ -1363,8 +1472,8 @@ tar_target(
         dt <- rbindlist(constant_dose_response_thresholds_prep)
         dt[, Scenario := 'Constant']
         dt[, log_KD := log_k_off - log_k_on]
-        dt[, .(time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
-               response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
+        dt[, .(time_0_mean = mean(time_0), time_10_mean = mean(time_10), time_25_mean = mean(time_25), time_50_mean = mean(time_50), time_75_mean = mean(time_75), time_90_mean = mean(time_90),
+               response_0_mean = mean(response_0), response_10_mean = mean(response_10), response_25_mean = mean(response_25), response_50_mean = mean(response_50), response_75_mean = mean(response_75), response_90_mean = mean(response_90)), 
              by = .(age, Scenario, Weight, chemical, log_AC50, log_k_off, log_k_on, log_KD)]
 
       }
